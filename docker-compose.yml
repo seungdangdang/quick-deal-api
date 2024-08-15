@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.4.2
+    container_name: quick-deal
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - quick_deal:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  quick_deal:
