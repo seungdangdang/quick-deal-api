@@ -1,8 +1,8 @@
 class Versions {
     companion object {
         const val SPRING_BOOT = "3.3.2"
-        const val JACKSON = "2.15.2"
         const val LOMBOK = "1.18.28"
+        const val QUERY_DSL = "5.0.0"
     }
 }
 
@@ -40,10 +40,11 @@ subprojects {
         implementation("org.springframework.boot:spring-boot-starter-web:${Versions.SPRING_BOOT}")
         implementation("org.springframework.boot:spring-boot-starter-data-jpa:${Versions.SPRING_BOOT}")
         implementation("org.projectlombok:lombok:${Versions.LOMBOK}")
-        implementation("com.fasterxml.jackson.core:jackson-databind:${Versions.JACKSON}")
-        implementation("com.fasterxml.jackson.core:jackson-core:${Versions.JACKSON}")
-        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:${Versions.JACKSON}")
+        implementation("com.querydsl:querydsl-jpa:${Versions.QUERY_DSL}:jakarta")
         annotationProcessor("org.projectlombok:lombok:${Versions.LOMBOK}")
+        annotationProcessor("com.querydsl:querydsl-apt:${Versions.QUERY_DSL}:jakarta")
+        annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+        annotationProcessor("jakarta.persistence:jakarta.persistence-api")
         implementation("mysql:mysql-connector-java:8.0.33")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         testImplementation("org.junit.jupiter:junit-jupiter-api")
