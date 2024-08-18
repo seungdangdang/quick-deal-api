@@ -1,9 +1,11 @@
 package com.quickdeal.product.infrastructure.repository;
 
-import com.quickdeal.product.infrastructure.entity.Product;
+import com.quickdeal.product.infrastructure.entity.ProductEntity;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long>, ProductRepositoryCustom {
+public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
+  List<ProductEntity> findTop20ByIdLessThanOrderByIdDesc(Long id);
 }
