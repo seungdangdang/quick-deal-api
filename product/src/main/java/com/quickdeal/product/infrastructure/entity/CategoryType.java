@@ -21,9 +21,9 @@ public enum CategoryType {
   HEALTH_SUPPLEMENTS("헬스/건강식품"),
   TRAVEL_TICKETS("여행/티켓");
 
-  private final String koreanName;
+  private final String name;
 
-  CategoryType(String koreanName) {
-    this.koreanName = koreanName;
+  CategoryType(String name) {
+    this.name = name;
   }
 }
