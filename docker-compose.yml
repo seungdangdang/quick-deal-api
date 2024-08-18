@@ -6,6 +6,7 @@ services:
     container_name: quick-deal
     environment:
       MYSQL_ROOT_PASSWORD: root
+    command: mysqld --general-log=1 --general-log-file=/var/log/mysql/general-log.log
     volumes:
       - quick_deal:/var/lib/mysql
     ports:
