@@ -15,23 +15,16 @@ CREATE TABLE `user_auth`
     FOREIGN KEY (user_id) REFERENCES user (id)
 );
 
-CREATE TABLE `category`
-(
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL
-);
-
 CREATE TABLE `product`
 (
     id             BIGINT PRIMARY KEY AUTO_INCREMENT,
-    category_id    BIGINT       NOT NULL,
+    category_type  VARCHAR(255) NOT NULL,
     name           VARCHAR(255) NOT NULL,
     description    TEXT         NOT NULL,
     price          INT          NOT NULL,
     stock_quantity INT          NOT NULL,
     created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES category (id)
+    updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE `order`
