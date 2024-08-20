@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrderProductRepository extends JpaRepository<OrderProductEntity, Long> {
 
-  // TODO - 주문 1회 상품 개수 제한둘 것
   @Query("SELECT op FROM OrderProduct op WHERE op.order.id = :orderId")
   List<OrderProductEntity> findByOrderId(@Param("orderId") Long orderId);
 }

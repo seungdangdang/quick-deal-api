@@ -1,5 +1,6 @@
 package com.quickdeal.order.service;
 
+import com.quickdeal.common.exception.BusinessRuleViolation;
 import com.quickdeal.order.infrastructure.entity.OrderEntity;
 import com.quickdeal.order.infrastructure.entity.OrderProductEntity;
 import com.quickdeal.order.infrastructure.entity.PaymentEntity;
@@ -33,6 +34,10 @@ public class OrderService {
 
   @Transactional
   public Order createOrder(OrderCreationCommand command) {
+    if (command.quantityPerProducts().size() > 20) {
+      throw new BusinessRuleViolation("주문 상품이 20개를 초과할 수 없습니다");
+    }
+
     OrderEntity orderEntity = OrderEntity.createOrder(command.userUUID());
 
     // 주문 저장
@@ -41,7 +46,7 @@ public class OrderService {
     // 주문-상품 저장
     for (QuantityPerProduct productOne : command.quantityPerProducts()) {
       Long productId = productOne.productId();
-      int price = productRepository.findPriceById(productId); // todo - product 모듈 간의 어댑터 구현 필요
+      int price = productRepository.findPriceById(productId); // TODO - product 모듈 간의 어댑터 구현 필요
 
       OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(savedOrder,
           productId, productOne.quantity(), price);
@@ -49,7 +54,8 @@ public class OrderService {
     }
 
     // 결제 정보 저장
-    List<OrderProductEntity> orderProducts = orderProductRepository.findByOrderId(savedOrder.getId());
+    List<OrderProductEntity> orderProducts = orderProductRepository.findByOrderId(
+        savedOrder.getId());
 
     int totalAmount = orderProducts.stream()
         .mapToInt(op -> op.getPrice() * op.getQuantity())
