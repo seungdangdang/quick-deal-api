@@ -1,12 +1,11 @@
 package com.quickdeal.product.api.controller;
 
-import com.quickdeal.product.api.resource.ProductResourceDetail;
 import com.quickdeal.product.api.resource.ProductResource;
+import com.quickdeal.product.api.resource.ProductResourceDetail;
 import com.quickdeal.product.api.resource.ProductResourceList;
 import com.quickdeal.product.service.ProductService;
 import com.quickdeal.product.service.domain.Product;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +15,6 @@ public class ProductController {
 
   private final ProductService productService;
 
-  @Autowired
   public ProductController(ProductService productService) {
     this.productService = productService;
   }

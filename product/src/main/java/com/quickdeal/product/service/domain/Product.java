@@ -13,4 +13,5 @@ public record Product(
     Instant createdAt,
     Instant updatedAt
 ) {
+
 }

@@ -4,7 +4,7 @@ import java.time.Instant;
 
 public record ErrorResponseBody(
     Instant timestamp,
-    int status,
+    Integer status,
     String error,
     String message,
     String path
