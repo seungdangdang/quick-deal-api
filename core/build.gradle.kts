@@ -18,7 +18,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":order"))
     implementation(project(":product"))
-    implementation(project(":payment"))
     implementation(project(":user"))
     implementation("org.flywaydb:flyway-core:${Versions.FLYWAY}")
     implementation("org.flywaydb:flyway-mysql")
