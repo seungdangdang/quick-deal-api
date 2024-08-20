@@ -1,5 +1,6 @@
 package com.quickdeal.order.service;
 
+import com.quickdeal.order.api.resource.QueueCommand;
 import com.quickdeal.order.service.domain.QueueToken;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +15,12 @@ public class OrderHandlerService {
     this.tokenService = tokenService;
   }
 
-  public QueueToken generateQueue(String userId) {
+  public QueueToken generateQueue(QueueCommand command) {
     // 마지막 요청 대기번호 업데이트 및 얻기
-    Long newQueueNumber = queueService.getNewQueueNumber();
+    Long newQueueNumber = queueService.getNewQueueNumber(command.productId());
 
     // 새로운 대기열 토큰 발급
-    QueueToken queueToken = tokenService.generateQueueNumber(userId, newQueueNumber);
+    QueueToken queueToken = tokenService.generateQueueNumber(command.productId(), command.userUUID(), newQueueNumber);
 
     // TODO - queue producer 요청 삽입 기능
 

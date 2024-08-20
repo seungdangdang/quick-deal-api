@@ -1,8 +1,9 @@
 package com.quickdeal.order.service.domain;
 
 public record QueueToken(
-    String userUUID,
     Long queueNumber,
+    Long productId,
+    String userUUID,
     String jwtToken
 ) {
 

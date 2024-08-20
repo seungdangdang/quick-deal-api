@@ -14,8 +14,8 @@ public class TokenService {
   }
 
   // 대기열 토큰 생성 로직
-  public QueueToken generateQueueNumber(String userId, Long newQueueNumber) {
+  public QueueToken generateQueueNumber(Long productId, String userId, Long newQueueNumber) {
     String token = jwtUtil.createQueueJwt(userId, newQueueNumber);
-    return new QueueToken(userId, newQueueNumber, token);
+    return new QueueToken(newQueueNumber, productId, userId, token);
   }
 }

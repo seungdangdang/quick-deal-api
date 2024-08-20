@@ -1,15 +1,17 @@
 package com.quickdeal.order.api.resource;
 
 public record QueuePollingRequestBody(
-    String userUUID,
     Long queueNumber,
+    Long productId,
+    String userUUID,
     String jwtToken
 ) {
 
   public QueuePollingCommand toCommand() {
     return new QueuePollingCommand(
-        userUUID,
         queueNumber,
+        productId,
+        userUUID,
         jwtToken
     );
   }

@@ -9,9 +9,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-  public static final String LAST_QUEUE_NUMBER_KEY = "lastQueueNumber";
-  public static final String LAST_EXITED_QUEUE_NUMBER_KEY = "lastExitedQueueNumber";
-  public static final String PAYMENT_PAGE_USER_COUNT_KEY = "paymentPageUserCount";
+  public static String getLastQueueNumberKey(Long productId) {
+    return "product:" + productId + ":lastQueueNumber";
+  }
+
+  public static String getLastExitedQueueNumberKey(Long productId) {
+    return "product:" + productId + ":lastExitedQueueNumber";
+  }
+
+  public static String getPaymentPageUserCountKey(Long productId) {
+    return "product:" + productId + ":paymentPageUserCount";
+  }
 
   @Bean
   public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {

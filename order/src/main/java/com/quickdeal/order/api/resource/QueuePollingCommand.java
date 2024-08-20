@@ -1,8 +1,9 @@
 package com.quickdeal.order.api.resource;
 
 public record QueuePollingCommand(
-    String userUUID,
     Long queueNumber,
+    Long productId,
+    String userUUID,
     String jwtToken
 ) {
 
