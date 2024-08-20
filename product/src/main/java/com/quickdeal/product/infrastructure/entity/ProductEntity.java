@@ -11,13 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity(name = "Product")
-@Table(name = "product")
+@Table(name = "`product`")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductEntity {
 
   @Id
