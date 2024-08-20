@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     image: mysql:8.4.2
-    container_name: quick-deal
+    container_name: quick-deal-db
     environment:
       MYSQL_ROOT_PASSWORD: root
     command: mysqld --general-log=1 --general-log-file=/var/log/mysql/general-log.log
@@ -12,5 +12,13 @@ services:
     ports:
       - "3306:3306"
 
+  redis:
+    image: redis:7.4.0
+    container_name: quick-deal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 volumes:
   quick_deal:
+  redis_data:
