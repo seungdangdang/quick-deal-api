@@ -1,12 +1,12 @@
 package com.quickdeal.order.api.controller;
 
 import com.quickdeal.order.api.resource.QueuePollingRequestBody;
-import com.quickdeal.order.api.resource.QueuePollingResource;
+import com.quickdeal.order.api.resource.QueueStatusResource;
 import com.quickdeal.order.api.resource.QueueRequestBody;
 import com.quickdeal.order.api.resource.QueueTokenResource;
 import com.quickdeal.order.service.OrderHandlerService;
 import com.quickdeal.order.service.QueueService;
-import com.quickdeal.order.domain.QueuePolling;
+import com.quickdeal.order.domain.QueueStatus;
 import com.quickdeal.order.domain.QueueToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,8 +30,8 @@ public class QueueController {
   }
 
   @PostMapping("/queue/polling")
-  public QueuePollingResource validQueueStatus(@RequestBody QueuePollingRequestBody requestBody) {
-    QueuePolling queuePolling = queueService.checkQueueStatus(requestBody.toCommand());
-    return QueuePollingResource.from(queuePolling);
+  public QueueStatusResource validQueueStatus(@RequestBody QueuePollingRequestBody requestBody) {
+    QueueStatus queueStatus = queueService.getUpdatedQueueStatus(requestBody.toCommand());
+    return QueueStatusResource.from(queueStatus);
   }
 }

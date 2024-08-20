@@ -19,9 +19,10 @@ public class ExceptionHandler {
   }
 
   @org.springframework.web.bind.annotation.ExceptionHandler(NotFoundException.class)
-  public ResponseEntity<ErrorResponseBody> handleNotFoundException(NotFoundException exception, HttpServletRequest request) {
+  public ResponseEntity<ErrorResponseBody> handleNotFoundException(NotFoundException exception,
+      HttpServletRequest request) {
     log.warn("[handleNotFoundException] exception: {}", exception.getMessage());
-    ErrorResponseBody body = new ErrorResponseBody (
+    ErrorResponseBody body = new ErrorResponseBody(
         Instant.now(),
         HttpStatus.NOT_FOUND.value(),
         HttpStatus.NOT_FOUND.getReasonPhrase(),
@@ -33,9 +34,25 @@ public class ExceptionHandler {
   }
 
   @org.springframework.web.bind.annotation.ExceptionHandler(BusinessRuleViolation.class)
-  public ResponseEntity<ErrorResponseBody> handleBusinessRuleViolationException(BadRequestException exception, HttpServletRequest request) {
+  public ResponseEntity<ErrorResponseBody> handleBusinessRuleViolationException(
+      BadRequestException exception, HttpServletRequest request) {
     log.warn("[handleBusinessRuleViolationException] exception: {}", exception.getMessage());
-    ErrorResponseBody body = new ErrorResponseBody (
+    ErrorResponseBody body = new ErrorResponseBody(
+        Instant.now(),
+        HttpStatus.BAD_REQUEST.value(),
+        HttpStatus.BAD_REQUEST.getReasonPhrase(),
+        exception.getMessage(),
+        request.getRequestURI()
+    );
+
+    return ResponseEntity.badRequest().body(body);
+  }
+
+  @org.springframework.web.bind.annotation.ExceptionHandler(JWTTokenException.class)
+  public ResponseEntity<ErrorResponseBody> handleJWTTokenException(JWTTokenException exception,
+      HttpServletRequest request) {
+    log.warn("[handleJWTTokenException] exception: {}", exception.getMessage());
+    ErrorResponseBody body = new ErrorResponseBody(
         Instant.now(),
         HttpStatus.BAD_REQUEST.value(),
         HttpStatus.BAD_REQUEST.getReasonPhrase(),
