@@ -5,7 +5,7 @@ import com.quickdeal.order.api.resource.QueuePollingRequestBody;
 import com.quickdeal.order.api.resource.QueuePollingResultResource;
 import com.quickdeal.order.api.resource.QueueResource;
 import com.quickdeal.order.api.resource.QueueTokenResource;
-import com.quickdeal.order.service.OrderApiService;
+import com.quickdeal.order.service.OrderHandlerService;
 import com.quickdeal.order.service.QueueService;
 import com.quickdeal.order.service.domain.QueuePolling;
 import com.quickdeal.order.service.domain.QueueToken;
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class QueueController {
 
-  private final OrderApiService apiService;
+  private final OrderHandlerService apiService;
   private final QueueService queueService;
 
-  public QueueController(OrderApiService apiService, QueueService queueService) {
+  public QueueController(OrderHandlerService apiService, QueueService queueService) {
     this.apiService = apiService;
     this.queueService = queueService;
   }
