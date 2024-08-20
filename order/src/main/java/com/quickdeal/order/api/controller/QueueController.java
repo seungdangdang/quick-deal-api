@@ -2,9 +2,7 @@ package com.quickdeal.order.api.controller;
 
 import com.quickdeal.order.api.resource.QueuePollingRequestBody;
 import com.quickdeal.order.api.resource.QueuePollingResource;
-import com.quickdeal.order.api.resource.QueuePollingResultResource;
 import com.quickdeal.order.api.resource.QueueRequestBody;
-import com.quickdeal.order.api.resource.QueueResource;
 import com.quickdeal.order.api.resource.QueueTokenResource;
 import com.quickdeal.order.service.OrderHandlerService;
 import com.quickdeal.order.service.QueueService;
@@ -26,18 +24,14 @@ public class QueueController {
   }
 
   @PostMapping("/queue")
-  public QueueResource generateQueueNumber(@RequestBody QueueRequestBody requestBody) {
+  public QueueTokenResource generateQueueNumber(@RequestBody QueueRequestBody requestBody) {
     QueueToken token = apiService.generateQueue(requestBody.toCommand());
-    QueueTokenResource resource = QueueTokenResource.from(token);
-
-    return new QueueResource(resource);
+    return QueueTokenResource.from(token);
   }
 
   @PostMapping("/queue/polling")
-  public QueuePollingResultResource validQueueStatus(@RequestBody QueuePollingRequestBody requestBody) {
+  public QueuePollingResource validQueueStatus(@RequestBody QueuePollingRequestBody requestBody) {
     QueuePolling queuePolling = queueService.checkQueueStatus(requestBody.toCommand());
-    QueuePollingResource resource = QueuePollingResource.from(queuePolling);
-
-    return new QueuePollingResultResource(resource);
+    return QueuePollingResource.from(queuePolling);
   }
 }

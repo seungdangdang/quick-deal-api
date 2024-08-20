@@ -3,13 +3,13 @@ package com.quickdeal.order.api.resource;
 import com.quickdeal.order.service.domain.QueuePolling;
 
 public record QueuePollingResource(
-    boolean hasWaitEnded,
+    boolean isExitedQueue,
     Long numberOfRemainingInQueue,
-    String newQueueToken
+    String renewedQueueToken
 ) {
 
   public static QueuePollingResource from(QueuePolling polling) {
-    return new QueuePollingResource(polling.hasWaitEnded(), polling.numberOfRemainingInQueue(),
-        polling.newQueueToken());
+    return new QueuePollingResource(polling.isExitedQueue(), polling.numberOfRemainingInQueue(),
+        polling.renewedQueueToken());
   }
 }

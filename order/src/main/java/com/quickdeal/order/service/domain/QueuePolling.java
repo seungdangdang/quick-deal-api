@@ -1,9 +1,9 @@
 package com.quickdeal.order.service.domain;
 
 public record QueuePolling(
-    boolean hasWaitEnded,
+    boolean isExitedQueue,
     Long numberOfRemainingInQueue,
-    String newQueueToken
+    String renewedQueueToken
 ) {
 
 }

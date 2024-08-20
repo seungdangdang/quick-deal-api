@@ -1,7 +1,6 @@
 package com.quickdeal.product.api.controller;
 
 import com.quickdeal.product.api.resource.ProductResource;
-import com.quickdeal.product.api.resource.ProductResourceDetail;
 import com.quickdeal.product.api.resource.ProductResourceList;
 import com.quickdeal.product.service.ProductService;
 import com.quickdeal.product.service.domain.Product;
@@ -28,9 +27,8 @@ public class ProductController {
   }
 
   @GetMapping("/products/{productId}")
-  public ProductResourceDetail getProductDetail(@PathVariable Long productId) {
+  public ProductResource getProductDetail(@PathVariable Long productId) {
     Product product = productService.getProductDetail(productId);
-    ProductResource resource = ProductResource.from(product);
-    return new ProductResourceDetail(resource);
+    return ProductResource.from(product);
   }
 }

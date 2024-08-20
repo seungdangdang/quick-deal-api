@@ -15,6 +15,7 @@ public record ProductResource(
     Instant createdAt,
     Instant updatedAt
 ) {
+
   public static ProductResource from(Product product) {
     return new ProductResource(
         product.id(),
