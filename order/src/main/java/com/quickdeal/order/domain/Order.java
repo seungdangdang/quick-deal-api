@@ -1,4 +1,4 @@
-package com.quickdeal.order.service.domain;
+package com.quickdeal.order.domain;
 
 import com.quickdeal.order.infrastructure.entity.OrderStatus;
 import java.time.Instant;

@@ -1,7 +1,7 @@
 package com.quickdeal.order.service;
 
 import com.quickdeal.order.api.resource.QueueCommand;
-import com.quickdeal.order.service.domain.QueueToken;
+import com.quickdeal.order.domain.QueueToken;
 import org.springframework.stereotype.Service;
 
 @Service

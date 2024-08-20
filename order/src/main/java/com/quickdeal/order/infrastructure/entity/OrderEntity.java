@@ -1,6 +1,6 @@
 package com.quickdeal.order.infrastructure.entity;
 
-import com.quickdeal.order.service.domain.Order;
+import com.quickdeal.order.domain.Order;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

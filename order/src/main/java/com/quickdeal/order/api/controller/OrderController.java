@@ -3,7 +3,7 @@ package com.quickdeal.order.api.controller;
 import com.quickdeal.order.api.resource.OrderCreateRequestBody;
 import com.quickdeal.order.api.resource.OrderResource;
 import com.quickdeal.order.service.OrderService;
-import com.quickdeal.order.service.domain.Order;
+import com.quickdeal.order.domain.Order;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,4 +1,4 @@
-package com.quickdeal.order.service.domain;
+package com.quickdeal.order.domain;
 
 public record QueueToken(
     Long queueNumber,

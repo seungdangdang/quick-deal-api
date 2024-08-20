@@ -1,7 +1,6 @@
 package com.quickdeal.order.api.resource;
 
-
-import com.quickdeal.order.service.domain.QueueToken;
+import com.quickdeal.order.domain.QueueToken;
 
 public record QueueTokenResource(
     Long queueNumber,

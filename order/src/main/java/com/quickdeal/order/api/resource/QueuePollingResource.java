@@ -1,6 +1,6 @@
 package com.quickdeal.order.api.resource;
 
-import com.quickdeal.order.service.domain.QueuePolling;
+import com.quickdeal.order.domain.QueuePolling;
 
 public record QueuePollingResource(
     boolean isExitedQueue,
