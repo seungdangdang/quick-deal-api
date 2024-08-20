@@ -1,16 +1,16 @@
 package com.quickdeal.order.service;
 
 import com.quickdeal.common.exception.BusinessRuleViolation;
+import com.quickdeal.common.service.ProductService;
 import com.quickdeal.order.infrastructure.entity.OrderEntity;
 import com.quickdeal.order.infrastructure.entity.OrderProductEntity;
 import com.quickdeal.order.infrastructure.entity.PaymentEntity;
 import com.quickdeal.order.infrastructure.repository.OrderProductRepository;
 import com.quickdeal.order.infrastructure.repository.OrderRepository;
 import com.quickdeal.order.infrastructure.repository.PaymentRepository;
-import com.quickdeal.order.service.domain.Order;
-import com.quickdeal.order.service.domain.OrderCreationCommand;
-import com.quickdeal.order.service.domain.QuantityPerProduct;
-import com.quickdeal.product.infrastructure.repository.ProductRepository;
+import com.quickdeal.order.domain.Order;
+import com.quickdeal.order.domain.OrderCreationCommand;
+import com.quickdeal.order.domain.QuantityPerProduct;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +21,15 @@ public class OrderService {
   private final OrderRepository orderRepository;
   private final OrderProductRepository orderProductRepository;
   private final PaymentRepository paymentRepository;
-  private final ProductRepository productRepository;
+  private final ProductService productService;
 
   public OrderService(OrderRepository orderRepository,
       OrderProductRepository orderProductRepository,
-      PaymentRepository paymentRepository, ProductRepository productRepository) {
+      PaymentRepository paymentRepository, ProductService productService) {
     this.orderRepository = orderRepository;
     this.orderProductRepository = orderProductRepository;
     this.paymentRepository = paymentRepository;
-    this.productRepository = productRepository;
+    this.productService = productService;
   }
 
   @Transactional
@@ -46,7 +46,7 @@ public class OrderService {
     // 주문-상품 저장
     for (QuantityPerProduct productOne : command.quantityPerProducts()) {
       Long productId = productOne.productId();
-      int price = productRepository.findPriceById(productId); // TODO - product 모듈 간의 어댑터 구현 필요
+      int price = productService.getPriceById(productId);
 
       OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(savedOrder,
           productId, productOne.quantity(), price);

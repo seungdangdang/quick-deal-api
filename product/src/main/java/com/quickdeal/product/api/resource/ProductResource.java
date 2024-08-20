@@ -1,7 +1,7 @@
 package com.quickdeal.product.api.resource;
 
-import com.quickdeal.product.infrastructure.entity.CategoryType;
-import com.quickdeal.product.service.domain.Product;
+import com.quickdeal.common.service.domain.CategoryType;
+import com.quickdeal.common.service.domain.Product;
 import java.time.Instant;
 
 public record ProductResource(

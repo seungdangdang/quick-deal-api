@@ -1,9 +1,9 @@
 package com.quickdeal.product.api.controller;
 
+import com.quickdeal.common.service.ProductService;
+import com.quickdeal.common.service.domain.Product;
 import com.quickdeal.product.api.resource.ProductResource;
 import com.quickdeal.product.api.resource.ProductResourceList;
-import com.quickdeal.product.service.ProductService;
-import com.quickdeal.product.service.domain.Product;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +28,7 @@ public class ProductController {
 
   @GetMapping("/products/{productId}")
   public ProductResource getProductDetail(@PathVariable Long productId) {
-    Product product = productService.getProductDetail(productId);
+    Product product = productService.getProduct(productId);
     return ProductResource.from(product);
   }
 }

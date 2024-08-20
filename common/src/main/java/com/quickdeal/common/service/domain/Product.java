@@ -1,6 +1,5 @@
-package com.quickdeal.product.service.domain;
+package com.quickdeal.common.service.domain;
 
-import com.quickdeal.product.infrastructure.entity.CategoryType;
 import java.time.Instant;
 
 public record Product(

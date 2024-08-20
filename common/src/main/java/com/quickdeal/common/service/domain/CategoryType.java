@@ -1,4 +1,4 @@
-package com.quickdeal.product.infrastructure.entity;
+package com.quickdeal.common.service.domain;
 
 import lombok.Getter;
 
