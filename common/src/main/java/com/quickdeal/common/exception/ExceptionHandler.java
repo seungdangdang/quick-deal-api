@@ -2,7 +2,6 @@ package com.quickdeal.common.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
-import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -35,7 +34,7 @@ public class ExceptionHandler {
 
   @org.springframework.web.bind.annotation.ExceptionHandler(BusinessRuleViolation.class)
   public ResponseEntity<ErrorResponseBody> handleBusinessRuleViolationException(
-      BadRequestException exception, HttpServletRequest request) {
+      BusinessRuleViolation exception, HttpServletRequest request) {
     log.warn("[handleBusinessRuleViolationException] exception: {}", exception.getMessage());
     ErrorResponseBody body = new ErrorResponseBody(
         Instant.now(),
