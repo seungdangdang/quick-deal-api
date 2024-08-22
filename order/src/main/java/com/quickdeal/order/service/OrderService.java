@@ -4,6 +4,7 @@ import com.quickdeal.common.exception.BusinessRuleViolation;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.order.domain.Order;
 import com.quickdeal.order.domain.OrderCreationCommand;
+import com.quickdeal.order.domain.OrderStatusUpdateCommand;
 import com.quickdeal.order.infrastructure.entity.OrderEntity;
 import com.quickdeal.order.infrastructure.entity.OrderProductEntity;
 import com.quickdeal.order.infrastructure.entity.PaymentEntity;
@@ -57,6 +58,11 @@ public class OrderService {
     paymentRepository.save(paymentEntity);
 
     return savedOrder.toOrder();
+  }
+
+  @Transactional
+  public void updateOrderStatus(OrderStatusUpdateCommand command) {
+    orderRepository.updateOrderStatus(command.orderId(), command.status());
   }
 
   private static void validationOrder(OrderCreationCommand command) {
