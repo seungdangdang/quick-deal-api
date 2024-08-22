@@ -47,10 +47,10 @@ public class QueueService {
     redisTemplate.opsForValue().set(key, lastExitedQueueNumber);
   }
 
-  public Long getCurrentPaymentPageUserCount(Long productId) {
+  public Integer getCurrentPaymentPageUserCount(Long productId) {
     String key = RedisConfig.getPaymentPageUserCountKey(productId);
-    Long value = redisTemplate.opsForValue().get(key);
-    return value != null ? value : 0L;
+    Object value = redisTemplate.opsForValue().get(key);
+    return value != null ? Integer.parseInt(String.valueOf(value)) : 0;
   }
 
   public void incrementPaymentPageUserCount(Long productId) {
