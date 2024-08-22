@@ -28,6 +28,9 @@ public class PaymentEntity {
   @Column(name = "payment_amount", nullable = false)
   private Integer paymentAmount;
 
+  @Column(name = "payment_date")
+  private Instant paymentDate;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "process_status", nullable = false)
   private PaymentStatus processStatus;
