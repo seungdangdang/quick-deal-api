@@ -2,16 +2,14 @@ package com.quickdeal.order.service;
 
 import com.quickdeal.common.exception.BusinessRuleViolation;
 import com.quickdeal.common.service.ProductService;
+import com.quickdeal.order.domain.Order;
+import com.quickdeal.order.domain.OrderCreationCommand;
 import com.quickdeal.order.infrastructure.entity.OrderEntity;
 import com.quickdeal.order.infrastructure.entity.OrderProductEntity;
 import com.quickdeal.order.infrastructure.entity.PaymentEntity;
 import com.quickdeal.order.infrastructure.repository.OrderProductRepository;
 import com.quickdeal.order.infrastructure.repository.OrderRepository;
 import com.quickdeal.order.infrastructure.repository.PaymentRepository;
-import com.quickdeal.order.domain.Order;
-import com.quickdeal.order.domain.OrderCreationCommand;
-import com.quickdeal.order.domain.QuantityPerProduct;
-import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,22 +40,18 @@ public class OrderService {
     OrderEntity savedOrder = orderRepository.save(orderEntity);
 
     // 주문-상품 저장
-    for (QuantityPerProduct productOne : command.quantityPerProducts()) {
-      Long productId = productOne.productId();
-      int price = productService.getPriceById(productId);
+    Long productId = command.quantityPerProduct().productId();
+    int price = productService.getPriceById(productId);
 
-      OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(savedOrder,
-          productId, productOne.quantity(), price);
-      orderProductRepository.save(orderProductEntity);
-    }
+    OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(savedOrder,
+        productId, command.quantityPerProduct().quantity(), price);
+    orderProductRepository.save(orderProductEntity);
 
     // 결제 정보 저장
-    List<OrderProductEntity> orderProducts = orderProductRepository.findByOrderId(
+    OrderProductEntity orderProducts = orderProductRepository.findByOrderId(
         savedOrder.getId());
 
-    int totalAmount = orderProducts.stream()
-        .mapToInt(op -> op.getPrice() * op.getQuantity())
-        .sum();
+    int totalAmount = orderProducts.getPrice() * orderProducts.getQuantity();
 
     PaymentEntity paymentEntity = PaymentEntity.createPayment(orderEntity, totalAmount);
     paymentRepository.save(paymentEntity);
@@ -66,26 +60,8 @@ public class OrderService {
   }
 
   private static void validationOrder(OrderCreationCommand command) {
-    // 1. 20 가짓 수 이상 구매할 수 없음
-    if (command.quantityPerProducts().size() > 20) {
-      throw new BusinessRuleViolation("주문 1회 당 담을 수 있는 최대 제품 가짓 수인 20개를 초과했습니다.");
-    }
-
-    // 2. 상품 별 구매 수량은 최대 20개
-    for (QuantityPerProduct p : command.quantityPerProducts()) {
-      if (p.quantity() > 5) {
-        throw new BusinessRuleViolation("제품 별 주문 최대 수량인 5개를 초과했습니다.");
-      }
-    }
-
-    // 3.총 구매 수량은 20개를 초과할 수 없음
-    int totalAmount = 0;
-    for (QuantityPerProduct p : command.quantityPerProducts()) {
-      totalAmount += p.quantity();
-      if (totalAmount > 20) {
-        throw new BusinessRuleViolation("주문 1회 당 구매 가능한 상품 총 개수인 20개를 초과했습니다.");
-      }
+    if (command.quantityPerProduct().quantity() > 20) {
+      throw new BusinessRuleViolation("주문 1회 당 최대 주문 가능 수량인 20개를 초과했습니다.");
     }
   }
 }
-
