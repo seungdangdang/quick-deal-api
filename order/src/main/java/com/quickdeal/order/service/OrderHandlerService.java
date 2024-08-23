@@ -1,21 +1,26 @@
 package com.quickdeal.order.service;
 
 import com.quickdeal.order.api.resource.QueueCommand;
+import com.quickdeal.order.domain.PaymentCommand;
 import com.quickdeal.order.domain.QueueMessage;
 import com.quickdeal.order.domain.QueueToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderHandlerService {
 
   private final QueueService queueService;
   private final TokenService tokenService;
-  private final MessageQueueService messageQueueService;
+  private final PaymentService paymentService;
+  private final MessageQueueProducer messageQueueService;
 
   public OrderHandlerService(QueueService queueService, TokenService tokenService,
-      MessageQueueService messageQueueService) {
+      PaymentService paymentService,
+      MessageQueueProducer messageQueueService) {
     this.queueService = queueService;
     this.tokenService = tokenService;
+    this.paymentService = paymentService;
     this.messageQueueService = messageQueueService;
   }
 
@@ -30,8 +35,22 @@ public class OrderHandlerService {
     // queue 메시지 삽입
     QueueMessage queueMessage = new QueueMessage(queueToken.queueNumber(), queueToken.productId(),
         queueToken.userUUID());
-    messageQueueService.publishMessage("queue", queueMessage);
+    messageQueueService.publishMessage("queue-" + command.productId(), queueMessage);
 
     return queueToken;
+  }
+
+  @Transactional
+  public void processCheckout(PaymentCommand command) {
+    try {
+      paymentService.checkout(command);
+    } catch (Exception e) {
+      paymentService.errorCheckout(command.orderId());
+      return;
+    }
+    // 결제가 완료 여부에 따라 상태업데이트
+    paymentService.endedCheckout(command.orderId());
+    queueService.decrementPaymentPageUserCount(command.productId());
+    // todo - 상태값 반환 필요
   }
 }
