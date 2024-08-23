@@ -7,7 +7,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class KafkaQueueServiceImpl implements MessageQueueService {
+public class KafkaQueueServiceImpl implements MessageQueueProducer {
 
   private final KafkaTemplate<String, String> kafkaTemplate;
   private final ObjectMapper objectMapper;

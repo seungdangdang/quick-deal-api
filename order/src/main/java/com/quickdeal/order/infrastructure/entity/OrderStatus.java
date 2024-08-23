@@ -6,5 +6,6 @@ import lombok.Getter;
 public enum OrderStatus {
   PROCESSING,
   DONE,
-  CANCEL;
+  CANCEL,
+  ERROR
 }

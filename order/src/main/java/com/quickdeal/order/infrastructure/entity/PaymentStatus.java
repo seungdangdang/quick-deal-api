@@ -6,5 +6,6 @@ import lombok.Getter;
 public enum PaymentStatus {
   PROCESSING,
   DONE,
-  CANCEL;
+  CANCEL,
+  ERROR
 }
