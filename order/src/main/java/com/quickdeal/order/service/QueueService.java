@@ -1,6 +1,8 @@
 package com.quickdeal.order.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quickdeal.common.exception.MaxUserLimitExceededException;
 import com.quickdeal.order.api.resource.QueuePollingCommand;
 import com.quickdeal.order.config.RedisConfig;
 import com.quickdeal.order.domain.QueueMessage;
@@ -15,9 +17,9 @@ public class QueueService {
 
   private final RedisTemplate<String, Long> redisTemplate;
   private final TokenService tokenService;
+  private final ObjectMapper objectMapper;
 
   private static final int MAX_PAYMENT_PAGE_USERS = 10;
-  private final ObjectMapper objectMapper;
 
   public QueueService(RedisTemplate<String, Long> redisTemplate,
       TokenService tokenService, ObjectMapper objectMapper) {
@@ -94,7 +96,7 @@ public class QueueService {
     }
   }
 
-  public void processQueueMessage(String message) throws Exception {
+  public void processQueueMessage(String message) throws JsonProcessingException {
     // 메시지를 QueueMessage 객체로 변환
     QueueMessage queueMessage = objectMapper.readValue(message, QueueMessage.class);
     Long productId = queueMessage.productId();
@@ -109,8 +111,7 @@ public class QueueService {
       // 마지막으로 대기열을 나간 사용자 번호 업데이트
       updateLastExitedQueueNumber(productId, queueMessage.queueNumber());
     } else {
-      // 최대 사용자 수를 초과하면 예외 발생 todo - 커스텀 예외 적용
-      throw new Exception();
+      throw new MaxUserLimitExceededException("결제페이지의 최대 사용자 용량에 도달했습니다.");
     }
   }
 }
