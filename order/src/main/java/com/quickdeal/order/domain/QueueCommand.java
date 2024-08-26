@@ -1,4 +1,4 @@
-package com.quickdeal.order.api.resource;
+package com.quickdeal.order.domain;
 
 public record QueueCommand(
     Long productId,

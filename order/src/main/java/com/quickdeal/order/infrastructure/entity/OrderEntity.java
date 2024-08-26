@@ -1,6 +1,7 @@
 package com.quickdeal.order.infrastructure.entity;
 
 import com.quickdeal.order.domain.Order;
+import com.quickdeal.order.domain.OrderStatusType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,7 +29,7 @@ public class OrderEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "process_status", nullable = false)
-  private OrderStatus processStatus;
+  private OrderStatusType processStatus;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private final Instant createdAt = Instant.now();
@@ -50,7 +51,7 @@ public class OrderEntity {
   public static OrderEntity createOrder(String userUUID) {
     OrderEntity order = new OrderEntity();
     order.userUUID = userUUID;
-    order.processStatus = OrderStatus.PROCESSING;
+    order.processStatus = OrderStatusType.PROCESSING;
     return order;
   }
 

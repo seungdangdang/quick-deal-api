@@ -20,10 +20,9 @@ public class KafkaQueueServiceImpl implements MessageQueueProducer {
   @Override
   public void publishMessage(String topic, QueueMessage message) {
     try {
-      String jsonMessage = objectMapper.writeValueAsString(message);
-      kafkaTemplate.send(topic, jsonMessage);
+      kafkaTemplate.send(topic, objectMapper.writeValueAsString(message));
     } catch (JsonProcessingException e) {
-      e.printStackTrace();
+      // todo - 예외처리
     }
   }
 }

@@ -1,5 +1,6 @@
 package com.quickdeal.order.infrastructure.entity;
 
+import com.quickdeal.order.domain.PaymentStatusType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,7 +34,7 @@ public class PaymentEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "process_status", nullable = false)
-  private PaymentStatus processStatus;
+  private PaymentStatusType processStatus;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt = Instant.now();
@@ -50,7 +51,7 @@ public class PaymentEntity {
     PaymentEntity paymentEntity = new PaymentEntity();
     paymentEntity.order = order;
     paymentEntity.paymentAmount = paymentAmount;
-    paymentEntity.processStatus = PaymentStatus.PROCESSING;
+    paymentEntity.processStatus = PaymentStatusType.PROCESSING;
     return paymentEntity;
   }
 }

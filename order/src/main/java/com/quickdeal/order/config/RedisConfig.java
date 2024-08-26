@@ -10,8 +10,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-  public static String getLastQueueNumberKey(Long productId) {
-    return "product:" + productId + ":lastQueueNumber";
+  public static String getLastTicketNumberKey(Long productId) {
+    return "product:" + productId + ":lastTicketNumber";
   }
 
   public static String getLastExitedQueueNumberKey(Long productId) {

@@ -1,7 +1,7 @@
-package com.quickdeal.order.api.resource;
+package com.quickdeal.order.domain;
 
 public record QueuePollingCommand(
-    Long queueNumber,
+    Long ticketNumber,
     Long productId,
     String userUUID,
     String jwtToken

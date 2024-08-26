@@ -1,6 +1,6 @@
 package com.quickdeal.order.api.resource;
 
-import com.quickdeal.order.domain.QueueToken;
+import com.quickdeal.order.domain.Ticket;
 
 public record QueueTokenResource(
     Long queueNumber,
@@ -9,7 +9,8 @@ public record QueueTokenResource(
     String jwtToken
 ) {
 
-  public static QueueTokenResource from(QueueToken token) {
-    return new QueueTokenResource( token.queueNumber(), token.productId(), token.userUUID(), token.jwtToken());
+  public static QueueTokenResource from(Ticket token) {
+    return new QueueTokenResource(token.ticketNumber(), token.productId(), token.userUUID(),
+        token.jwtToken());
   }
 }

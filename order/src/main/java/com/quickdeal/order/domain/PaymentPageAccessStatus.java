@@ -1,8 +1,7 @@
 package com.quickdeal.order.domain;
 
-public record QueueStatus(
-    boolean isSoldOut,
-    boolean isExitedQueue,
+public record PaymentPageAccessStatus(
+    PageAccessStatusType status,
     Long numberOfRemainingInQueue,
     String renewedQueueToken
 ) {

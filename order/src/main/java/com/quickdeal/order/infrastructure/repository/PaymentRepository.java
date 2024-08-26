@@ -1,7 +1,7 @@
 package com.quickdeal.order.infrastructure.repository;
 
 import com.quickdeal.order.infrastructure.entity.PaymentEntity;
-import com.quickdeal.order.infrastructure.entity.PaymentStatus;
+import com.quickdeal.order.domain.PaymentStatusType;
 import java.time.Instant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,5 +17,5 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
   void updateOrderPayment(
       @Param("orderId") Long orderId
       ,@Param("paymentDate") Instant paymentDate
-      ,@Param("status") PaymentStatus status);
+      ,@Param("status") PaymentStatusType status);
 }

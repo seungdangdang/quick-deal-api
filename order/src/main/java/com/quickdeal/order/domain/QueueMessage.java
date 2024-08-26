@@ -1,10 +1,10 @@
 package com.quickdeal.order.domain;
 
 public record QueueMessage(
-    Long queueNumber,
+    Long ticketNumber,
     Long productId,
     String userUUID,
-    String queueToken
+    String ticketToken
 ) {
 
 }

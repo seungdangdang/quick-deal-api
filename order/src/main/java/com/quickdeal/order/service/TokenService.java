@@ -1,7 +1,7 @@
 package com.quickdeal.order.service;
 
 import com.quickdeal.common.exception.JWTTokenException;
-import com.quickdeal.order.domain.QueueToken;
+import com.quickdeal.order.domain.Ticket;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -25,21 +25,21 @@ public class TokenService {
         SignatureAlgorithm.HS256.getJcaName());
   }
 
-  public QueueToken generateQueueNumber(Long productId, String userId, Long newQueueNumber) {
+  public Ticket generateTicketNumber(Long productId, String userId, Long ticketNumber) {
     Date now = new Date();
     String token = Jwts.builder()
         .setHeaderParam("type", "jwt")
         .claim("user_id", userId)
-        .claim("queue_number", newQueueNumber)
+        .claim("queue_number", ticketNumber)
         .setIssuedAt(now)
         .setExpiration(new Date(now.getTime() + 1000L * 60L * 60L * 2L))
         .signWith(hmacKey)
         .compact();
 
-    return new QueueToken(newQueueNumber, productId, userId, token);
+    return new Ticket(ticketNumber, productId, userId, token);
   }
 
-  public String extendQueueJwtExpiration(String token, Long extensionInMillis) {
+  public String extendTicketJwtExpiration(String token, Long extensionInMillis) {
     Claims claims = Jwts.parserBuilder()
         .setSigningKey(hmacKey)
         .build()
