@@ -33,7 +33,7 @@ public class OrderService {
 
   @Transactional
   public Order createOrder(OrderCreationCommand command) {
-    validationOrder(command);
+    validateOrderProductQuantity(command);
 
     OrderEntity orderEntity = OrderEntity.createOrder(command.userUUID());
 
@@ -65,9 +65,9 @@ public class OrderService {
     orderRepository.updateOrderStatus(command.orderId(), command.status());
   }
 
-  private static void validationOrder(OrderCreationCommand command) {
-    if (command.quantityPerProduct().quantity() > 20) {
-      throw new BusinessRuleViolation("주문 1회 당 최대 주문 가능 수량인 20개를 초과했습니다.");
+  private static void validateOrderProductQuantity(OrderCreationCommand command) {
+    if (command.quantityPerProduct().quantity() > 1) {
+      throw new BusinessRuleViolation("주문 1회 당 최대 주문 가능 수량인 1개를 초과했습니다.");
     }
   }
 }

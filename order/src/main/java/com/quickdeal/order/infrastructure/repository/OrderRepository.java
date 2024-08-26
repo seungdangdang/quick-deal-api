@@ -7,13 +7,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 
   @Modifying
-  @Transactional
   @Query("UPDATE Order o SET o.processStatus = :status WHERE o.id = :orderId")
   void updateOrderStatus(@Param("orderId") Long orderId, @Param("status") OrderStatus status);
 }

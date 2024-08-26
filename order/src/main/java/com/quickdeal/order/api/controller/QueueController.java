@@ -31,7 +31,7 @@ public class QueueController {
 
   @PostMapping("/queue/polling")
   public QueueStatusResource validQueueStatus(@RequestBody QueuePollingRequestBody requestBody) {
-    QueueStatus queueStatus = queueService.getUpdatedQueueStatus(requestBody.toCommand());
+    QueueStatus queueStatus = queueService.checkQueueStatus(requestBody.toCommand());
     return QueueStatusResource.from(queueStatus);
   }
 }

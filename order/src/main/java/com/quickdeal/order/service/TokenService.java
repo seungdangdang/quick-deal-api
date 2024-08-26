@@ -57,7 +57,7 @@ public class TokenService {
         .compact();
   }
 
-  public Claims getClaimsByToken(String token) {
+  public Claims validateTokenAndGetClaims(String token) {
     try {
       return Jwts.parserBuilder()
           .setSigningKey(hmacKey)
