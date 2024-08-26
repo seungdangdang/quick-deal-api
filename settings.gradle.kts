@@ -1,7 +1,7 @@
 rootProject.name = "quick-deal"
 include("core")
 include("common")
-include("order")
+include("purchase")
 include("product")
 include("user")
 include("scheduler")

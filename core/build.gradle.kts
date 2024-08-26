@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":order"))
+    implementation(project(":purchase"))
     implementation(project(":product"))
     implementation(project(":user"))
     implementation(project(":scheduler"))

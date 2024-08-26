@@ -9,18 +9,18 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @ComponentScan({
     "com.quickdeal.common",
-    "com.quickdeal.order",
+    "com.quickdeal.purchase",
     "com.quickdeal.product",
     "com.quickdeal.user",
     "com.quickdeal.scheduler"
 })
 @EnableJpaRepositories(basePackages = {
     "com.quickdeal.product.infrastructure.repository",
-    "com.quickdeal.order.infrastructure.repository"
+    "com.quickdeal.purchase.infrastructure.repository"
 })
 @EntityScan(basePackages = {
     "com.quickdeal.product.infrastructure.entity",
-    "com.quickdeal.order.infrastructure.entity"
+    "com.quickdeal.purchase.infrastructure.entity"
 })
 public class CoreApplication {
 
