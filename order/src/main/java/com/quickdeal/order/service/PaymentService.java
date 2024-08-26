@@ -1,5 +1,8 @@
 package com.quickdeal.order.service;
 
+import com.quickdeal.common.service.ProductService;
+import com.quickdeal.order.api.resource.CheckoutStatus;
+import com.quickdeal.order.api.resource.CheckoutStatusResult;
 import com.quickdeal.order.domain.OrderStatusUpdateCommand;
 import com.quickdeal.order.domain.PaymentCommand;
 import com.quickdeal.order.infrastructure.entity.OrderStatus;
@@ -16,15 +19,25 @@ public class PaymentService {
 
   private final PaymentRepository paymentRepository;
   private final OrderService orderService;
+  private final ProductService productService;
 
   public PaymentService(PaymentRepository paymentRepository,
-      OrderService orderService) {
+      OrderService orderService, ProductService productService) {
     this.paymentRepository = paymentRepository;
     this.orderService = orderService;
+    this.productService = productService;
   }
 
-  public void checkout(PaymentCommand paymentCommand) {
+  @Transactional
+  public CheckoutStatusResult checkout(PaymentCommand command) {
+    if (productService.hasStockQuantityById(command.productId())) {
+      //TODO: 결제 로직
 
+      return new CheckoutStatusResult(CheckoutStatus.DONE_CHECKOUT, command.orderId(),
+          command.paymentAmount());
+    }
+
+    return new CheckoutStatusResult(CheckoutStatus.ERROR, command.orderId(), null);
   }
 
   @Transactional
@@ -39,6 +52,7 @@ public class PaymentService {
   public void cancelCheckout(Long orderId) {
     orderService.updateOrderStatus(new OrderStatusUpdateCommand(orderId, OrderStatus.CANCEL));
     paymentRepository.updateOrderPayment(orderId, null, PaymentStatus.CANCEL);
+    productService.increaseStockQuantityById(orderId);
     // todo - 상태값 반환 필요
   }
 
@@ -46,6 +60,7 @@ public class PaymentService {
   public void errorCheckout(Long orderId) {
     orderService.updateOrderStatus(new OrderStatusUpdateCommand(orderId, OrderStatus.ERROR));
     paymentRepository.updateOrderPayment(orderId, null, PaymentStatus.ERROR);
+    productService.increaseStockQuantityById(orderId);
     // todo - 상태값 반환 필요
   }
 }

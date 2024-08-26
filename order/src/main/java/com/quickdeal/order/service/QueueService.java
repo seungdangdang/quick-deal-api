@@ -1,31 +1,41 @@
 package com.quickdeal.order.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quickdeal.common.exception.MaxUserLimitExceededException;
+import com.quickdeal.common.service.ProductService;
+import com.quickdeal.order.api.resource.QueueEntryRequestParams;
 import com.quickdeal.order.api.resource.QueuePollingCommand;
 import com.quickdeal.order.config.RedisConfig;
 import com.quickdeal.order.domain.QueueMessage;
 import com.quickdeal.order.domain.QueueStatus;
 import io.jsonwebtoken.Claims;
 import java.util.Date;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class QueueService {
 
   private final RedisTemplate<String, Long> redisTemplate;
   private final TokenService tokenService;
-  private final ObjectMapper objectMapper;
+  private final long retryDelay;
+  private final long retryLimit;
+  private final int maxPaymentPageUsers;
+  private final ProductService productService;
 
-  private static final int MAX_PAYMENT_PAGE_USERS = 10;
-
-  public QueueService(RedisTemplate<String, Long> redisTemplate,
-      TokenService tokenService, ObjectMapper objectMapper) {
+  public QueueService(@Value("${retry.delay}") long retryDelay,
+      @Value("${retry.limit}") long retryLimit,
+      @Value("${payment.max-users}") int maxPaymentPageUsers,
+      RedisTemplate<String, Long> redisTemplate, TokenService tokenService,
+      ProductService productService) {
+    this.retryDelay = retryDelay;
+    this.retryLimit = retryLimit;
+    this.maxPaymentPageUsers = maxPaymentPageUsers;
     this.redisTemplate = redisTemplate;
     this.tokenService = tokenService;
-    this.objectMapper = objectMapper;
+    this.productService = productService;
   }
 
   // 레디스에서 마지막으로 요청 들어온 대기번호 업데이트하는 코드
@@ -35,33 +45,25 @@ public class QueueService {
     return newQueueNumber != null ? Long.parseLong(String.valueOf(newQueueNumber)) : 1L;
   }
 
-  // 레디스에서 마지막 요청 들어온 대기번호 가져오는 코드
-  public Long getLastQueueNumber(Long productId) {
-    String key = RedisConfig.getLastExitedQueueNumberKey(productId);
-    Object value = redisTemplate.opsForValue().get(key);
-    return value != null ? Long.parseLong(String.valueOf(value)) : 0L;
-  }
-
   // 레디스에서 마지막으로 대기열에서 빠져나간 대기번호 가져오는 코드
-  public Long getLastExitedQueueNumber(Long productId) {
+  private Long getLastExitedQueueNumber(Long productId) {
     String key = RedisConfig.getLastExitedQueueNumberKey(productId);
     Object value = redisTemplate.opsForValue().get(key);
     return value != null ? Long.parseLong(String.valueOf(value)) : 0L;
   }
 
-  public void updateLastExitedQueueNumber(Long productId,
-      Long lastExitedQueueNumber) {
+  private void updateLastExitedQueueNumber(Long productId, Long lastExitedQueueNumber) {
     String key = RedisConfig.getLastExitedQueueNumberKey(productId);
     redisTemplate.opsForValue().set(key, lastExitedQueueNumber);
   }
 
-  public Integer getCurrentPaymentPageUserCount(Long productId) {
+  private Integer getCurrentPaymentPageUserCount(Long productId) {
     String key = RedisConfig.getPaymentPageUserCountKey(productId);
     Object value = redisTemplate.opsForValue().get(key);
     return value != null ? Integer.parseInt(String.valueOf(value)) : 0;
   }
 
-  public void incrementPaymentPageUserCount(Long productId) {
+  private void incrementPaymentPageUserCount(Long productId) {
     String key = RedisConfig.getPaymentPageUserCountKey(productId);
     redisTemplate.opsForValue().increment(key, 1);
   }
@@ -71,47 +73,66 @@ public class QueueService {
     redisTemplate.opsForValue().increment(key, -1);
   }
 
-  public QueueStatus getUpdatedQueueStatus(QueuePollingCommand queuePollingCommand) {
-    Long lastExitedQueueNumber = getLastExitedQueueNumber(queuePollingCommand.productId());
-    Long requestQueueNumber = queuePollingCommand.queueNumber();
+  public QueueStatus checkQueueStatus(QueuePollingCommand command) {
+    if (!productService.hasCachingStockQuantityById(command.productId())) {
+      return new QueueStatus(true, false, 0L, null);
+    }
+
+    Long lastExitedQueueNumber = getLastExitedQueueNumber(command.productId());
+    Long requestQueueNumber = command.queueNumber();
     long remainingInQueue = requestQueueNumber - lastExitedQueueNumber;
 
-    Claims claims = tokenService.getClaimsByToken(queuePollingCommand.jwtToken());
+    Claims claims = tokenService.validateTokenAndGetClaims(command.jwtToken());
 
     if (remainingInQueue <= 0) {
-      return new QueueStatus(true, 0L, null);
+      return new QueueStatus(false, true, 0L, null);
     } else {
-      Date expiration = claims.getExpiration();
-      long now = System.currentTimeMillis();
-      long timeUntilExpiration = expiration.getTime() - now;
-
-      if (timeUntilExpiration <= 1000L * 60L * 30L) {
-        String newToken = tokenService.extendQueueJwtExpiration(queuePollingCommand.jwtToken(),
-            1000L * 60L * 60L);
-        return new QueueStatus(false, remainingInQueue, newToken);
-      } else {
-        return new QueueStatus(false, remainingInQueue,
-            queuePollingCommand.jwtToken());
-      }
+      String renewToken = renewTokenIfExpiringSoon(claims, command.jwtToken());
+      return new QueueStatus(false, false, remainingInQueue, renewToken);
     }
   }
 
-  public void processQueueMessage(String message) throws JsonProcessingException {
-    // 메시지를 QueueMessage 객체로 변환
-    QueueMessage queueMessage = objectMapper.readValue(message, QueueMessage.class);
-    Long productId = queueMessage.productId();
+  private String renewTokenIfExpiringSoon(Claims claims, String jwtToken) {
+    Date expiration = claims.getExpiration();
+    long now = System.currentTimeMillis();
+    long timeUntilExpiration = expiration.getTime() - now;
 
-    // 현재 결제 페이지에 있는 사용자 수를 가져옴
-    Integer currentCount = getCurrentPaymentPageUserCount(productId);
-
-    // 사용자 수가 최대값보다 적은지 확인
-    if (currentCount < MAX_PAYMENT_PAGE_USERS) {
-      // 사용자 수 증가
-      incrementPaymentPageUserCount(productId);
-      // 마지막으로 대기열을 나간 사용자 번호 업데이트
-      updateLastExitedQueueNumber(productId, queueMessage.queueNumber());
+    if (timeUntilExpiration <= 1000L * 60L * 30L) {
+      return tokenService.extendQueueJwtExpiration(jwtToken, 1000L * 60L * 60L);
     } else {
-      throw new MaxUserLimitExceededException("결제페이지의 최대 사용자 용량에 도달했습니다.");
+      return jwtToken;
     }
+  }
+
+  @Transactional
+  public void processQueueMessageForPageAccess(QueueMessage message)
+      throws JsonProcessingException, InterruptedException {
+    // 상품 아이디 검증
+    productService.getProduct(message.productId());
+    // 유효 토큰 검증
+    tokenService.validateTokenAndGetClaims(message.queueToken());
+    // 페이지 접속자 확인
+    checkAccessWithRetryLimit(
+        new QueueEntryRequestParams(message.productId(), message.queueNumber()));
+  }
+
+  @Transactional
+  public void checkAccessWithRetryLimit(QueueEntryRequestParams request)
+      throws InterruptedException {
+    for (int i = 0; i < retryLimit; i++) {
+      Integer accessorCount = getCurrentPaymentPageUserCount(request.productId());
+      // 사용자 수가 최대값보다 적은지 확인
+      if (accessorCount < maxPaymentPageUsers) {
+        // 레디스에서 최신대기번호 업데이트
+        incrementPaymentPageUserCount(request.productId());
+        // 레디스에서 마지막으로 대기열을 나간 사용자 번호 업데이트
+        updateLastExitedQueueNumber(request.productId(), request.queueNumber());
+        //todo - 해당 상품의 재고 1 마이너스 (미리확보)
+        productService.decreaseStockQuantityById(request.productId());
+        return;
+      }
+      Thread.sleep(retryDelay);
+    }
+    throw new MaxUserLimitExceededException("결제페이지의 최대 사용자 용량에 도달했습니다.");
   }
 }

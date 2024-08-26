@@ -3,13 +3,20 @@ package com.quickdeal.product.infrastructure.repository;
 import com.quickdeal.product.infrastructure.entity.ProductEntity;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
+
   List<ProductEntity> findTop20ByIdLessThanOrderByIdDesc(Long id);
 
-  @Query("SELECT p.price FROM Product p WHERE p.id = :id")
-  int findPriceById(Long id);
+  @Modifying
+  @Query("UPDATE Product p SET p.stockQuantity = p.stockQuantity - 1 WHERE p.id = :productId AND p.stockQuantity > 0")
+  void decreaseStockQuantity(Long productId);
+
+  @Modifying
+  @Query("UPDATE Product p SET p.stockQuantity = p.stockQuantity + 1 WHERE p.id = :productId AND p.stockQuantity > 0")
+  void increaseStockQuantity(Long productId);
 }

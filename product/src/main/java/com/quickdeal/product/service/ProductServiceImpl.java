@@ -2,6 +2,7 @@ package com.quickdeal.product.service;
 
 import com.quickdeal.common.exception.NotFoundException;
 import com.quickdeal.common.service.ProductService;
+import com.quickdeal.common.service.StockCacheService;
 import com.quickdeal.common.service.domain.Product;
 import com.quickdeal.product.infrastructure.entity.ProductEntity;
 import com.quickdeal.product.infrastructure.repository.ProductRepository;
@@ -13,18 +14,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductServiceImpl implements ProductService {
 
   private final ProductRepository productRepository;
+  private final StockCacheService stockCacheService;
 
-  public ProductServiceImpl(ProductRepository productRepository) {
+  public ProductServiceImpl(ProductRepository productRepository,
+      StockCacheService stockCacheService) {
     this.productRepository = productRepository;
+    this.stockCacheService = stockCacheService;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<Product> getProdudctList() {
+    return productRepository.findAll().stream().map(ProductEntity::toProduct).toList();
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<Product> getProductList(Long lastId) {
-    return productRepository.findTop20ByIdLessThanOrderByIdDesc(lastId)
-        .stream()
-        .map(ProductEntity::toProduct)
-        .toList();
+    return productRepository.findTop20ByIdLessThanOrderByIdDesc(lastId).stream()
+        .map(ProductEntity::toProduct).toList();
   }
 
   @Override
@@ -36,7 +44,42 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public int getPriceById(Long id) {
-    return productRepository.findPriceById(id);
+    Product product = productRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("해당 상품 아이디는 존재하지 않습니다.")).toProduct();
+
+    return product.price();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean hasStockQuantityById(Long id) {
+    Product product = productRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("해당 상품 아이디는 존재하지 않습니다.")).toProduct();
+
+    return product.stockQuantity() > 0;
+  }
+
+  @Override
+  public boolean hasCachingStockQuantityById(Long id) {
+    Integer stock = stockCacheService.getStock(id);
+    if (stock == null) {
+      throw new NotFoundException("해당 상품 아이디는 존재하지 않습니다.");
+    }
+
+    return stock > 0;
+  }
+
+  @Override
+  @Transactional
+  public void decreaseStockQuantityById(Long productId) {
+    productRepository.decreaseStockQuantity(productId);
+  }
+
+  @Override
+  @Transactional
+  public void increaseStockQuantityById(Long productId) {
+    productRepository.increaseStockQuantity(productId);
   }
 }
