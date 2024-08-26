@@ -1,5 +1,7 @@
 package com.quickdeal.order.service;
 
+import com.quickdeal.order.api.resource.CheckoutStatus;
+import com.quickdeal.order.api.resource.CheckoutStatusResult;
 import com.quickdeal.order.api.resource.QueueCommand;
 import com.quickdeal.order.domain.PaymentCommand;
 import com.quickdeal.order.domain.QueueMessage;
@@ -34,23 +36,32 @@ public class OrderHandlerService {
 
     // queue 메시지 삽입
     QueueMessage queueMessage = new QueueMessage(queueToken.queueNumber(), queueToken.productId(),
-        queueToken.userUUID());
+        queueToken.userUUID(), queueToken.jwtToken());
     messageQueueService.publishMessage("queue-" + command.productId(), queueMessage);
 
     return queueToken;
   }
 
+  // todo - rdb, 레디스 간 트랜잭션 필요
   @Transactional
-  public void processCheckout(PaymentCommand command) {
-    try {
-      paymentService.checkout(command);
-    } catch (Exception e) {
+  public CheckoutStatusResult processCheckout(PaymentCommand command) { // TODO: 반환값 타입 수정
+    CheckoutStatusResult result = paymentService.checkout(command);
+
+    if (result.status() == CheckoutStatus.DONE_CHECKOUT) {
+      paymentService.endedCheckout(command.orderId());
+      queueService.decrementPaymentPageUserCount(command.productId());
+    } else if (result.status() == CheckoutStatus.ERROR) {
       paymentService.errorCheckout(command.orderId());
-      return;
+      queueService.decrementPaymentPageUserCount(command.productId());
     }
-    // 결제가 완료 여부에 따라 상태업데이트
-    paymentService.endedCheckout(command.orderId());
-    queueService.decrementPaymentPageUserCount(command.productId());
-    // todo - 상태값 반환 필요
+
+    return result;
+  }
+
+  // todo - rdb, 레디스 간 트랜잭션 필요
+  @Transactional
+  public void cancelCheckout(Long orderId) {
+    paymentService.cancelCheckout(orderId);
+    queueService.decrementPaymentPageUserCount(orderId);
   }
 }

@@ -4,10 +4,11 @@ import com.quickdeal.order.domain.PaymentCommand;
 
 public record PaymentRequestBody(
     Long orderId,
-    Long productId
+    Long productId,
+    Integer paymentAmount
 ) {
 
   public PaymentCommand toCommand() {
-    return new PaymentCommand(orderId, productId);
+    return new PaymentCommand(orderId, productId, paymentAmount);
   }
 }
