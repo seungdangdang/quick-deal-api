@@ -11,7 +11,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.quickdeal.common",
     "com.quickdeal.order",
     "com.quickdeal.product",
-    "com.quickdeal.user"
+    "com.quickdeal.user",
+    "com.quickdeal.scheduler"
 })
 @EnableJpaRepositories(basePackages = {
     "com.quickdeal.product.infrastructure.repository",

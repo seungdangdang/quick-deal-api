@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":order"))
     implementation(project(":product"))
     implementation(project(":user"))
+    implementation(project(":scheduler"))
     implementation("org.flywaydb:flyway-core:${Versions.FLYWAY}")
     implementation("org.flywaydb:flyway-mysql")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
