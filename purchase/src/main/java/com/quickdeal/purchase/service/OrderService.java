@@ -3,13 +3,11 @@ package com.quickdeal.purchase.service;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.common.service.domain.Product;
 import com.quickdeal.purchase.domain.Order;
-import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.OrderInfo;
 import com.quickdeal.purchase.domain.OrderProduct;
 import com.quickdeal.purchase.domain.OrderProductInfo;
 import com.quickdeal.purchase.domain.OrderStatusType;
 import com.quickdeal.purchase.domain.PaymentStatusType;
-import com.quickdeal.purchase.domain.PaymentStatusUpdateCommand;
 import com.quickdeal.purchase.infrastructure.entity.OrderEntity;
 import com.quickdeal.purchase.infrastructure.entity.OrderProductEntity;
 import com.quickdeal.purchase.infrastructure.entity.PaymentEntity;
@@ -38,15 +36,13 @@ public class OrderService {
 
   // :: 주문과 결제 초기 데이터 저장
   @Transactional
-  public void saveOrderAndPaymentInitialData(OrderCreationCommand command) {
-    OrderEntity orderEntity = OrderEntity.createOrder(command.userUUID());
+  public void saveOrderAndPaymentInitialData(String userUUID, Long productId, Integer quantity) {
+    OrderEntity orderEntity = OrderEntity.createOrder(userUUID);
 
     // 주문 저장
     OrderEntity savedOrder = orderRepository.save(orderEntity);
 
     // 주문-상품 저장
-    long productId = command.quantityPerProduct().productId();
-    int quantity = command.quantityPerProduct().quantity();
     int price = productService.getPriceById(productId);
     OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(savedOrder,
         productId, quantity, price);
@@ -87,11 +83,9 @@ public class OrderService {
 
     // 결제 상태 업데이트
     if (orderStatus == OrderStatusType.DONE) {
-      paymentService.updatePaymentStatus(
-          new PaymentStatusUpdateCommand(orderId, Instant.now(), paymentStatus));
+      paymentService.updatePaymentStatus(orderId, Instant.now(), paymentStatus);
     } else {
-      paymentService.updatePaymentStatus(
-          new PaymentStatusUpdateCommand(orderId, null, paymentStatus));
+      paymentService.updatePaymentStatus(orderId, null, paymentStatus);
     }
 
     // 주문 취소 또는 오류 시 재고 증가
