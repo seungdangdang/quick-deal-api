@@ -86,8 +86,13 @@ public class OrderService {
     orderRepository.updateOrderStatus(orderId, orderStatus);
 
     // 결제 상태 업데이트
-    paymentService.updatePaymentStatus(
-        new PaymentStatusUpdateCommand(orderId, Instant.now(), paymentStatus));
+    if (orderStatus == OrderStatusType.DONE) {
+      paymentService.updatePaymentStatus(
+          new PaymentStatusUpdateCommand(orderId, Instant.now(), paymentStatus));
+    } else {
+      paymentService.updatePaymentStatus(
+          new PaymentStatusUpdateCommand(orderId, null, paymentStatus));
+    }
 
     // 주문 취소 또는 오류 시 재고 증가
     if (orderStatus == OrderStatusType.CANCEL || orderStatus == OrderStatusType.ERROR) {
