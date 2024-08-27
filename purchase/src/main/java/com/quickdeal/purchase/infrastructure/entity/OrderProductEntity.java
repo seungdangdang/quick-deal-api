@@ -1,5 +1,6 @@
 package com.quickdeal.purchase.infrastructure.entity;
 
+import com.quickdeal.purchase.domain.OrderProduct;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -45,5 +46,9 @@ public class OrderProductEntity {
     orderProductEntity.quantity = quantity;
     orderProductEntity.price = price;
     return orderProductEntity;
+  }
+
+  public OrderProduct toOrderProduct() {
+    return new OrderProduct(id, productId, quantity, price);
   }
 }
