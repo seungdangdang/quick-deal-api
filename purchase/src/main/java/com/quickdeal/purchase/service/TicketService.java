@@ -7,7 +7,6 @@ import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.PageAccessStatusType;
 import com.quickdeal.purchase.domain.PaymentPageAccessStatus;
 import com.quickdeal.purchase.domain.QueueMessage;
-import com.quickdeal.purchase.domain.QueuePollingCommand;
 import com.quickdeal.purchase.domain.Ticket;
 import io.jsonwebtoken.Claims;
 import java.util.Date;
@@ -58,21 +57,23 @@ public class TicketService {
   }
 
   // :: 대기열 상태 확인 (캐싱된 재고가 없다면, 재고 없다는 내용 반환 | 재고가 있고 남은 앞 대기자가 없다면 진입 가능 상태 반환 | 재고가 있고 앞 대기자가 있다면 진입 불가능 상태 반환)
-  public PaymentPageAccessStatus getPaymentPageAccessStatusByTicket(QueuePollingCommand command) {
-    if (!productService.hasCachingStockQuantityById(command.productId())) {
+  public PaymentPageAccessStatus getPaymentPageAccessStatusByTicket(String ticketToken) {
+    Claims claims = tokenService.validateTokenAndGetClaims(ticketToken);
+
+    Long productId = claims.get("product_id", Long.class);
+    Long queueNumber = claims.get("queue_number", Long.class);
+
+    if (!productService.hasCachingStockQuantityById(productId)) {
       return new PaymentPageAccessStatus(PageAccessStatusType.ITEM_SOLD_OUT, null, null);
     }
 
-    Long lastExitedQueueNumber = redisService.getLastExitedQueueNumber(command.productId());
-    Long requestQueueNumber = command.ticketNumber();
-    long remainingInQueue = requestQueueNumber - lastExitedQueueNumber;
-
-    Claims claims = tokenService.validateTokenAndGetClaims(command.jwtToken());
+    Long lastExitedQueueNumber = redisService.getLastExitedQueueNumber(productId);
+    long remainingInQueue = queueNumber - lastExitedQueueNumber;
 
     if (remainingInQueue <= 0) {
       return new PaymentPageAccessStatus(PageAccessStatusType.ACCESS_GRANTED, 0L, null);
     } else {
-      String renewToken = renewTokenIfExpiringSoon(claims, command.jwtToken());
+      String renewToken = renewTokenIfExpiringSoon(claims, ticketToken);
       return new PaymentPageAccessStatus(PageAccessStatusType.ACCESS_DENIED, remainingInQueue,
           renewToken);
     }
@@ -121,6 +122,5 @@ public class TicketService {
       Thread.sleep(retryDelay);
     }
     throw new MaxUserLimitExceededException("결제페이지의 최대 사용자 용량에 도달했습니다.");
-
   }
 }

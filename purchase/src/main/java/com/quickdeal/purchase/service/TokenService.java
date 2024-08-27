@@ -29,6 +29,7 @@ public class TokenService {
     Date now = new Date();
     String token = Jwts.builder()
         .setHeaderParam("type", "jwt")
+        .claim("product_id", productId)
         .claim("user_id", userId)
         .claim("queue_number", ticketNumber)
         .setIssuedAt(now)
@@ -36,7 +37,7 @@ public class TokenService {
         .signWith(hmacKey)
         .compact();
 
-    return new Ticket(ticketNumber, productId, userId, token);
+    return new Ticket(token);
   }
 
   public String extendTicketJwtExpiration(String token, Long extensionInMillis) {
