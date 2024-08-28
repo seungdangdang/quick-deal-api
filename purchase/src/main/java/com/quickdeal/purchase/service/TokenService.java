@@ -25,13 +25,14 @@ public class TokenService {
         SignatureAlgorithm.HS256.getJcaName());
   }
 
-  public Ticket generateTicketNumber(Long productId, String userId, Long ticketNumber) {
+  public Ticket generateTicketNumber(Long productId, String userId, Long ticketNumber, Long orderId) {
     Date now = new Date();
     String token = Jwts.builder()
         .setHeaderParam("type", "jwt")
         .claim("product_id", productId)
         .claim("user_id", userId)
         .claim("queue_number", ticketNumber)
+        .claim("order_id", orderId)
         .setIssuedAt(now)
         .setExpiration(new Date(now.getTime() + 1000L * 60L * 60L * 2L))
         .signWith(hmacKey)
