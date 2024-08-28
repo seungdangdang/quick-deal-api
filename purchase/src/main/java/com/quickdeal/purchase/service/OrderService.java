@@ -1,5 +1,6 @@
 package com.quickdeal.purchase.service;
 
+import com.quickdeal.common.exception.OrderStatusInvalidException;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.common.service.domain.Product;
 import com.quickdeal.purchase.domain.Order;
@@ -36,7 +37,7 @@ public class OrderService {
 
   // :: 주문과 결제 초기 데이터 저장
   @Transactional
-  public void saveOrderAndPaymentInitialData(String userUUID, Long productId, Integer quantity) {
+  public Order saveOrderAndPaymentInitialData(String userUUID, Long productId, Integer quantity) {
     OrderEntity orderEntity = OrderEntity.createOrder(userUUID);
 
     // 주문 저장
@@ -53,6 +54,8 @@ public class OrderService {
     int totalAmount = orderProducts.getPrice() * orderProducts.getQuantity();
     PaymentEntity paymentEntity = PaymentEntity.createPayment(orderEntity, totalAmount);
     paymentService.createPayment(paymentEntity);
+
+    return savedOrder.toOrder();
   }
 
   @Transactional
@@ -63,7 +66,7 @@ public class OrderService {
 
     OrderProduct orderProduct = orderProductRepository.findByOrderId(orderId).toOrderProduct();
 
-    Product product = productService.getProduct(orderProduct.id());
+    Product product = productService.getProduct(orderProduct.productId());
 
     OrderProductInfo orderPRoductInfo = new OrderProductInfo(
         orderProduct.id(),
@@ -91,6 +94,16 @@ public class OrderService {
     // 주문 취소 또는 오류 시 재고 증가
     if (orderStatus == OrderStatusType.CANCEL || orderStatus == OrderStatusType.ERROR) {
       productService.increaseStockQuantityById(orderId);
+    }
+  }
+
+  @Transactional
+  public void validateAvailableOrder(Long orderId) {
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId))
+        .toOrder();
+    if (order.status() != OrderStatusType.PROCESSING) {
+      throw new OrderStatusInvalidException("유효하지 않은 주문입니다.");
     }
   }
 }

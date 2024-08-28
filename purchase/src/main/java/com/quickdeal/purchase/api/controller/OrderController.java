@@ -37,8 +37,9 @@ public class OrderController {
 
   // :: 주문 취소
   @DeleteMapping("/orders/{orderId}")
-  public void cancelCheckout(@PathVariable Long orderId) {
-    purchaseHandlerService.handleCancelCheckout(orderId);
+  public OrderResource cancelCheckout(@PathVariable Long orderId) {
+    OrderInfo orderInfo = purchaseHandlerService.handleCancelCheckout(orderId);
+    return OrderResource.from(orderInfo);
   }
 
   // :: 주문 상세 정보
