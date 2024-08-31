@@ -1,8 +1,8 @@
 package com.quickdeal.purchase.service;
 
 import com.quickdeal.common.service.ProductService;
-import com.quickdeal.purchase.domain.CheckoutStatus;
-import com.quickdeal.purchase.domain.CheckoutStatusType;
+import com.quickdeal.purchase.domain.PaymentStatus;
+import com.quickdeal.purchase.domain.PaymentStatuses;
 import com.quickdeal.purchase.domain.PaymentStatusType;
 import com.quickdeal.purchase.infrastructure.entity.PaymentEntity;
 import com.quickdeal.purchase.infrastructure.repository.PaymentRepository;
@@ -22,16 +22,16 @@ public class PaymentService {
   }
 
   @Transactional
-  public CheckoutStatus getCheckoutStatus(Long orderId, Long productId, Integer paymentAmount) {
+  public PaymentStatus getPaymentStatus(Long orderId, Long productId, Integer paymentAmount) {
     try {
       if (productService.hasStockQuantityById(productId)) {
         //TODO: 결제 처리 로직
-        return new CheckoutStatus(CheckoutStatusType.CHECKOUT_COMPLETED, orderId,
+        return new PaymentStatus(PaymentStatuses.PAYMENT_COMPLETED, orderId,
             paymentAmount);
       }
-      return new CheckoutStatus(CheckoutStatusType.ITEM_SOLD_OUT, orderId, null);
+      return new PaymentStatus(PaymentStatuses.ITEM_SOLD_OUT, orderId, null);
     } catch (Exception e) {
-      return new CheckoutStatus(CheckoutStatusType.CHECKOUT_ERROR, orderId, null);
+      return new PaymentStatus(PaymentStatuses.PAYMENT_ERROR, orderId, null);
     }
   }
 
@@ -41,7 +41,7 @@ public class PaymentService {
   }
 
   @Transactional
-  public void createPayment(PaymentEntity entity) {
-    paymentRepository.save(entity);
+  public PaymentEntity createPayment(PaymentEntity entity) {
+    return paymentRepository.save(entity);
   }
 }

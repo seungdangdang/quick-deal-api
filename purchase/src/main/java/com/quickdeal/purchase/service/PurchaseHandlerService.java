@@ -5,7 +5,6 @@ import com.quickdeal.purchase.domain.Order;
 import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.OrderInfo;
 import com.quickdeal.purchase.domain.OrderStatusType;
-import com.quickdeal.purchase.domain.PaymentCommand;
 import com.quickdeal.purchase.domain.PaymentStatusType;
 import com.quickdeal.purchase.domain.Ticket;
 import org.slf4j.Logger;
@@ -52,22 +51,29 @@ public class PurchaseHandlerService {
     log.debug("[payment-service] finished payment, status: {}, orderId: {}", status.status(),
         orderId);
 
-    CheckoutStatus result = paymentService.getCheckoutStatus(orderId, productId,
-        command.paymentAmount());
-
-    CheckoutStatusType status = result.status();
-    if (status.isCheckoutCompleted()) {
-      orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.DONE,
-          PaymentStatusType.DONE);
-      redisService.decrementPaymentPageUserCount(productId);
+    if (status.isPaymentCompleted()) {
+      handlePaymentCompleteStatus(orderId, productId, userUUID);
     } else if (status.isItemSoldOut()) {
-      handleCancelCheckout(orderId);
+      handleCancelPayment(orderId, userUUID);
     } else {
-      orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.ERROR,
-          PaymentStatusType.ERROR);
-      redisService.decrementPaymentPageUserCount(productId);
+      handlePaymentFailed(orderId, productId, userUUID);
     }
-    return result;
+    return status;
+  }
+
+  // TODO: rdb, 레디스 간 트랜잭션 필요
+  private void handlePaymentFailed(Long orderId, Long productId, String userUUID) {
+    log.debug("[handlePaymentFailed] payment not completed. userID: {}", userUUID);
+    orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.ERROR,
+        PaymentStatusType.ERROR);
+    redisService.removePaymentPageUser(productId, userUUID);
+  }
+
+  // TODO: rdb, 레디스 간 트랜잭션 필요
+  private void handlePaymentCompleteStatus(Long orderId, Long productId, String userUUID) {
+    log.debug("[handlePaymentCompleteStatus] payment completed. userID: {}", userUUID);
+    orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.DONE, PaymentStatusType.DONE);
+    redisService.removePaymentPageUser(productId, userUUID);
   }
 
   // :: 결제 취소 - 주문 / 결제 정보업데이트
@@ -76,7 +82,7 @@ public class PurchaseHandlerService {
     log.debug("[handleCancelPayment] item sold out > cancel. userID: {}", userUUID);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.CANCEL,
         PaymentStatusType.CANCEL);
-    redisService.decrementPaymentPageUserCount(orderId);
+    redisService.removePaymentPageUser(orderId, userUUID);
     return orderService.getOrderInfo(orderId);
   }
 }
