@@ -16,12 +16,15 @@ import com.quickdeal.purchase.infrastructure.repository.OrderProductRepository;
 import com.quickdeal.purchase.infrastructure.repository.OrderRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
 
+  private final Logger log;
   private final OrderRepository orderRepository;
   private final ProductService productService;
   private final PaymentService paymentService;
@@ -33,27 +36,30 @@ public class OrderService {
     this.productService = productService;
     this.paymentService = paymentService;
     this.orderProductRepository = orderProductRepository;
+    this.log = LoggerFactory.getLogger(this.getClass());
   }
 
   // :: 주문과 결제 초기 데이터 저장
   @Transactional
   public Order saveOrderAndPaymentInitialData(String userUUID, Long productId, Integer quantity) {
+    int price = productService.getPriceById(productId);
+    int totalAmount = price * quantity;
+
     OrderEntity orderEntity = OrderEntity.createOrder(userUUID);
 
-    // 주문 저장
+    OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(orderEntity,
+        productId, quantity, price);
+
+    PaymentEntity paymentEntity = PaymentEntity.createPayment(orderEntity, totalAmount);
+
     OrderEntity savedOrder = orderRepository.save(orderEntity);
 
-    // 주문-상품 저장
-    int price = productService.getPriceById(productId);
-    OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(savedOrder,
-        productId, quantity, price);
     orderProductRepository.save(orderProductEntity);
 
-    // 결제 정보 저장
-    OrderProductEntity orderProducts = orderProductRepository.findByOrderId(savedOrder.getId());
-    int totalAmount = orderProducts.getPrice() * orderProducts.getQuantity();
-    PaymentEntity paymentEntity = PaymentEntity.createPayment(orderEntity, totalAmount);
-    paymentService.createPayment(paymentEntity);
+//    paymentService.createPayment(paymentEntity);
+    PaymentEntity savedPaymentEntity = paymentService.createPayment(paymentEntity);
+    log.debug("[saveOrderAndPaymentInitialData] creteOrderInitial: {}, createPaymentInitial: {}",
+        orderEntity, savedPaymentEntity.toString());
 
     return savedOrder.toOrder();
   }
@@ -61,19 +67,14 @@ public class OrderService {
   @Transactional
   public OrderInfo getOrderInfo(Long orderId) {
     Order order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId))
-        .toOrder();
+        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId)).toOrder();
 
     OrderProduct orderProduct = orderProductRepository.findByOrderId(orderId).toOrderProduct();
 
     Product product = productService.getProduct(orderProduct.productId());
 
-    OrderProductInfo orderPRoductInfo = new OrderProductInfo(
-        orderProduct.id(),
-        product.name(),
-        orderProduct.quantity(),
-        orderProduct.price()
-    );
+    OrderProductInfo orderPRoductInfo = new OrderProductInfo(orderProduct.id(), product.name(),
+        orderProduct.quantity(), orderProduct.price());
 
     return new OrderInfo(order.id(), orderPRoductInfo);
   }
@@ -100,8 +101,7 @@ public class OrderService {
   @Transactional
   public void validateAvailableOrder(Long orderId) {
     Order order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId))
-        .toOrder();
+        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId)).toOrder();
     if (order.status() != OrderStatusType.PROCESSING) {
       throw new OrderStatusInvalidException("유효하지 않은 주문입니다.");
     }

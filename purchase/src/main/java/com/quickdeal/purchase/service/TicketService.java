@@ -1,19 +1,26 @@
 package com.quickdeal.purchase.service;
 
+import static com.quickdeal.purchase.util.LuaUtil.loadLuaScript;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.quickdeal.common.exception.MaxUserLimitExceededException;
 import com.quickdeal.common.service.ProductService;
-import com.quickdeal.purchase.domain.PageAccessStatusType;
+import com.quickdeal.purchase.domain.PageAccessStatuses;
 import com.quickdeal.purchase.domain.PaymentPageAccessStatus;
 import com.quickdeal.purchase.domain.QueueMessage;
 import com.quickdeal.purchase.domain.Ticket;
 import io.jsonwebtoken.Claims;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 @Service
 public class TicketService {
@@ -47,7 +54,6 @@ public class TicketService {
     this.log = LoggerFactory.getLogger(this.getClass());
   }
 
-
   // 레디스를 통해 티켓 번호 증가하여 get > 토큰 발급 > 카푸카 메시지 발생 > (에러생길시) 레디스의 마지막 티켓 번호 감소
   // :: 대기열 토큰 발급
   // :: 메시지큐 대기 메시지 삽입
@@ -57,6 +63,7 @@ public class TicketService {
     try {
       Ticket ticket = tokenService.generateTicketNumber(productId, userUUID, newTicketNumber,
           orderId);
+      Claims claims = tokenService.validateTokenAndGetClaims(ticket.jwtToken());
 
       QueueMessage queueMessage = new QueueMessage(newTicketNumber, productId, userUUID,
           ticket.jwtToken());
@@ -65,8 +72,9 @@ public class TicketService {
 
       return ticket;
     } catch (Exception e) {
+      log.error("[issueTicket] failed to issueTicket", e);
       redisService.decrementLastTicketNumber(productId);
-
+      log.error("[issueTicket] failed > finished redis rollback");
       throw e;
     }
   }
@@ -77,19 +85,33 @@ public class TicketService {
 
     Long productId = claims.get("product_id", Long.class);
     Long queueNumber = claims.get("queue_number", Long.class);
+    log.debug(
+        "[getPaymentPageAccessStatusByTicket] start checkQueueStatus, orderId: {}, queueNumber: {}",
+        claims.get("order_id"), queueNumber);
 
     if (!productService.hasCachingStockQuantityById(productId)) {
-      return new PaymentPageAccessStatus(PageAccessStatusType.ITEM_SOLD_OUT, null, null);
+      log.debug("[getPaymentPageAccessStatusByTicket] caching stock quantity");
+      return new PaymentPageAccessStatus(PageAccessStatuses.ITEM_SOLD_OUT, null, null);
     }
 
     Long lastExitedQueueNumber = redisService.getLastExitedQueueNumber(productId);
+
     long remainingInQueue = queueNumber - lastExitedQueueNumber;
+    log.debug(
+        "[getPaymentPageAccessStatusByTicket] this queueNumber: {}, lastExitedQueueNumber: {}, remainingInQueue: {}",
+        queueNumber, lastExitedQueueNumber, remainingInQueue);
 
     if (remainingInQueue <= 0) {
-      return new PaymentPageAccessStatus(PageAccessStatusType.ACCESS_GRANTED, 0L, null);
+      log.debug("[getPaymentPageAccessStatusByTicket] ACCESS_GRANTED, orderId: {}",
+          claims.get("order_id"));
+      return new PaymentPageAccessStatus(PageAccessStatuses.ACCESS_GRANTED, 0L, null);
     } else {
+      log.debug("[getPaymentPageAccessStatusByTicket] ACCESS_DENIED, orderId: {}",
+          claims.get("order_id"));
       String renewToken = renewTokenIfExpiringSoon(claims, ticketToken);
-      return new PaymentPageAccessStatus(PageAccessStatusType.ACCESS_DENIED, remainingInQueue,
+      log.debug("[getPaymentPageAccessStatusByTicket] ACCESS_DENIED, renewToken: {}",
+          renewToken);
+      return new PaymentPageAccessStatus(PageAccessStatuses.ACCESS_DENIED, remainingInQueue,
           renewToken);
     }
   }
@@ -119,7 +141,7 @@ public class TicketService {
     orderService.validateAvailableOrder(orderId);
 
     // 페이지 접속자 확인
-    validateAccessWithRetryLimit(message.productId(), message.ticketNumber());
+    validateAccessWithRetryLimit(message.userUUID(), message.productId(), message.ticketNumber());
   }
 
   // :: 페이지 액세스 확인 with 재실행

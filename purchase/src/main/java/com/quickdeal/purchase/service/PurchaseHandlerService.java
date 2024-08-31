@@ -1,7 +1,6 @@
 package com.quickdeal.purchase.service;
 
-import com.quickdeal.purchase.domain.CheckoutStatus;
-import com.quickdeal.purchase.domain.CheckoutStatusType;
+import com.quickdeal.purchase.domain.PaymentStatus;
 import com.quickdeal.purchase.domain.Order;
 import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.OrderInfo;
@@ -39,14 +38,19 @@ public class PurchaseHandlerService {
     Integer quantity = command.quantityPerProduct().quantity();
 
     Order order = orderService.saveOrderAndPaymentInitialData(userUUID, productId, quantity);
+    log.debug(
+        "[getTicket] finished saveOrderAndPaymentInitialData, userUUID: {}, orderId : {}, orderStatus : {}",
+        userUUID, order.id(), order.status());
     return queueService.issueTicket(userUUID, productId, order.id());
   }
 
   // :: 결제 진행 후 주문, 결제 상태 업데이트
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  public CheckoutStatus handleCheckoutProcess(PaymentCommand command) {
-    Long orderId = command.orderId();
-    Long productId = command.productId();
+  public PaymentStatus payment(Long orderId, Long productId, Integer paymentAmount,
+      String userUUID) {
+    PaymentStatus status = paymentService.getPaymentStatus(orderId, productId, paymentAmount);
+    log.debug("[payment-service] finished payment, status: {}, orderId: {}", status.status(),
+        orderId);
 
     CheckoutStatus result = paymentService.getCheckoutStatus(orderId, productId,
         command.paymentAmount());
@@ -68,7 +72,8 @@ public class PurchaseHandlerService {
 
   // :: 결제 취소 - 주문 / 결제 정보업데이트
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  public OrderInfo handleCancelCheckout(Long orderId) {
+  public OrderInfo handleCancelPayment(Long orderId, String userUUID) {
+    log.debug("[handleCancelPayment] item sold out > cancel. userID: {}", userUUID);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.CANCEL,
         PaymentStatusType.CANCEL);
     redisService.decrementPaymentPageUserCount(orderId);
