@@ -1,14 +1,13 @@
-package com.quickdeal.purchase.api.resource;
+package com.quickdeal.purchase.api.controller;
 
 import com.quickdeal.purchase.domain.PaymentCommand;
 
 public record PaymentRequestBody(
-    Long orderId,
-    Long productId,
+    String ticketToken,
     Integer paymentAmount
 ) {
 
   public PaymentCommand toCommand() {
-    return new PaymentCommand(orderId, productId, paymentAmount);
+    return new PaymentCommand(ticketToken, paymentAmount);
   }
 }

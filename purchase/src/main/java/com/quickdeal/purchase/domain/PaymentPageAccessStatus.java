@@ -1,7 +1,7 @@
 package com.quickdeal.purchase.domain;
 
 public record PaymentPageAccessStatus(
-    PageAccessStatusType status,
+    PageAccessStatuses status,
     Long numberOfRemainingInQueue,
     String renewedQueueToken
 ) {
