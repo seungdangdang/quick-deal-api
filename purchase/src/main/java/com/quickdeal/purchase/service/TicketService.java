@@ -122,48 +122,28 @@ public class TicketService {
     validateAccessWithRetryLimit(message.productId(), message.ticketNumber());
   }
 
-  // TODO: 레디스 트랜잭션 고민
-  // :: 페이지 액세스 확인 with 재실행 - redis / rdb
-  public void validateAccessWithRetryLimit(Long productId, Long ticketNumber)
+  // :: 페이지 액세스 확인 with 재실행
+  public void validateAccessWithRetryLimit(String userUUID, Long productId, Long ticketNumber)
       throws InterruptedException {
-
     for (int i = 0; i < retryLimit; i++) {
-      Integer accessorCount = redisService.getCurrentPaymentPageUserCount(productId);
-      if (accessorCount < maxPaymentPageUsers) {
-        boolean incrementedPageUser = false;
-        boolean updatedLastExitedTicketNumber = false;
-        Long currentLastExitedQueueNumber = redisService.getLastExitedQueueNumber(productId);
+      try {
+        String luaScript = loadLuaScript(
+            "purchase/src/main/java/com/quickdeal/purchase/service/script.lua");
+        List<String> keys = Collections.singletonList(productId.toString());
+        List<String> args = Arrays.asList(ticketNumber.toString(), userUUID,
+            String.valueOf(maxPaymentPageUsers));
 
-        try {
-          // 레디스에서 접속현황 업데이트히여 세마포어 확보
-          redisService.incrementPaymentPageUserCount(productId);
-          incrementedPageUser = true;
+        Object result = redisService.executeLuaScript(luaScript, keys, args);
+        int success = Integer.parseInt(result.toString());
 
-          // 레디스에서 마지막으로 대기열을 나간 사용자 번호 업데이트
-          redisService.updateLastExitedTicketNumber(productId, ticketNumber);
-          updatedLastExitedTicketNumber = true;
-
-          // 해당 상품의 재고 1개 미리 확보
+        if (success == 1) {
           productService.decreaseStockQuantityById(productId);
-
           return;
-        } catch (Exception e) {
-          try {
-            if (incrementedPageUser) {
-              redisService.decrementPaymentPageUserCount(productId);
-            }
-          } catch (Exception e1) {
-            log.error("보상 트랜잭션 실패(paymentPageUserCount 복구 실패)");
-          }
-          try {
-            if (updatedLastExitedTicketNumber) {
-              redisService.updateLastExitedTicketNumber(productId, currentLastExitedQueueNumber);
-            }
-          } catch (Exception e2) {
-            log.error("보상 트랜잭션 실패(updatedLastExitedTicketNumber 복구 실패)");
-          }
-          throw e; //TODO: 적절한 예외 던지기
         }
+      } catch (IOException e) {
+        log.error("Lua 스크립트 실행 중 네트워크 오류 발생");
+      } catch (JedisDataException e) {
+        log.error("Lua 스크립트 실행 중 redis.call 오류 발생");
       }
       Thread.sleep(retryDelay);
     }
