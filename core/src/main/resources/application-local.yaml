@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8082
 
 spring:
   datasource:
@@ -17,7 +17,7 @@ spring:
           lob:
             non_contextual_creation: true
         format_sql: true
-    show-sql: true
+    show-sql: false
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -31,8 +31,24 @@ spring:
       database: 0
       timeout: 10000ms
 
+kafka:
+  bootstrap-servers: localhost:9092
+
+logging:
+  level:
+    com.quickdeal: DEBUG
+  config: classpath:logback.xml
+
+# 비즈니스 설정 값
 jwt:
   secret-key: ${SECRET_KEY}
 
-kafka:
-  bootstrap-servers: localhost:9092
+retry:
+  delay: 1000 # 결제 페이지 접속 여부 확인 시 thread.sleep
+  limit: 500 # 결제 페이지 접속 여부 반복 제한
+
+queue:
+  topic-header: "queue-"
+
+payment:
+  max-users: 10
