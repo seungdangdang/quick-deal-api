@@ -73,10 +73,12 @@ public class OrderService {
 
     Product product = productService.getProduct(orderProduct.productId());
 
-    OrderProductInfo orderPRoductInfo = new OrderProductInfo(orderProduct.id(), product.name(),
+    OrderProductInfo orderProductInfo = new OrderProductInfo(orderProduct.id(), product.name(),
         orderProduct.quantity(), orderProduct.price());
 
-    return new OrderInfo(order.id(), orderPRoductInfo);
+    Integer amount = orderProductInfo.price() * orderProductInfo.quantity();
+
+    return new OrderInfo(order.id(), orderProductInfo, amount);
   }
 
   @Transactional

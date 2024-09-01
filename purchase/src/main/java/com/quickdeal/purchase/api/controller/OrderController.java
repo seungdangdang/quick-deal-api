@@ -7,10 +7,10 @@ import com.quickdeal.purchase.domain.Ticket;
 import com.quickdeal.purchase.service.OrderService;
 import com.quickdeal.purchase.service.PurchaseHandlerService;
 import com.quickdeal.purchase.service.TokenService;
-import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,23 +40,19 @@ public class OrderController {
       @RequestBody OrderCreateRequestBody requestBody) {
     log.debug("<controller> [orders] start orders, UUID : {}", requestBody.userUUID());
     Ticket token = purchaseHandlerService.getTicket(requestBody.toCommand());
-
     return QueueTokenResource.from(token);
   }
 
   // :: 주문 취소
-  @DeleteMapping("/orders")
-  public OrderResource cancelPayment(@RequestParam String ticketToken) {
-    Claims claims = tokenService.validateTokenAndGetClaims(ticketToken);
-    String userId = claims.get("user_id", String.class);
-    Long orderId = claims.get("order_id", Long.class);
+  @DeleteMapping("/orders/{orderId}")
+  public OrderResource cancelPayment(@PathVariable Long orderId, @RequestParam String userId) {
     orderService.validateAvailableOrder(orderId);
     OrderInfo orderInfo = purchaseHandlerService.handleCancelPayment(orderId, userId);
     return OrderResource.from(orderInfo);
   }
 
   // :: 주문 상세 정보
-  @PostMapping("/orders/{orderId}")
+  @GetMapping("/orders/{orderId}")
   public OrderResource getOrderDetail(@PathVariable Long orderId) {
     OrderInfo orderInfo = orderService.getOrderInfo(orderId);
     return OrderResource.from(orderInfo);
