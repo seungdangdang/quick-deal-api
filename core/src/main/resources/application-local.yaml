@@ -51,4 +51,6 @@ queue:
   topic-header: "queue-"
 
 payment:
-  max-users: 10
+  page:
+    max-users: 100
+    timeout-seconds: 600
