@@ -43,6 +43,11 @@ logging:
 jwt:
   secret-key: ${SECRET_KEY}
 
+ticket-token:
+    expiration: 2h
+    renewal-threshold: 30m
+    extension-duration: 1h
+
 retry:
   delay: 1000 # 결제 페이지 접속 여부 확인 시 thread.sleep
   limit: 500 # 결제 페이지 접속 여부 반복 제한

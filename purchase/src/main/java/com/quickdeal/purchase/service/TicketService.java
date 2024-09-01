@@ -11,6 +11,7 @@ import com.quickdeal.purchase.domain.QueueMessage;
 import com.quickdeal.purchase.domain.Ticket;
 import io.jsonwebtoken.Claims;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -35,11 +36,16 @@ public class TicketService {
   private final RedisService redisService;
   private final OrderService orderService;
   private final Logger log;
+  private final Duration renewalThreshold;
+  private final Duration extensionDuration;
 
   public TicketService(@Value("${retry.delay}") long retryDelay,
       @Value("${retry.limit}") long retryLimit,
-      @Value("${payment.max-users}") int maxPaymentPageUsers,
-      @Value("${queue.topic-header}") String topicHeaderStr, TokenService tokenService,
+      @Value("${payment.page.max-users}") int maxPaymentPageUsers,
+      @Value("${queue.topic-header}") String topicHeaderStr,
+      @Value("${ticket-token.renewal-threshold}") Duration renewalThreshold,
+      @Value("${ticket-token.extension-duration}") Duration extensionDuration,
+      TokenService tokenService,
       ProductService productService, MessageQueueProducer messageQueueService,
       RedisService redisService, OrderService orderService) {
     this.retryDelay = retryDelay;
@@ -52,6 +58,8 @@ public class TicketService {
     this.redisService = redisService;
     this.orderService = orderService;
     this.log = LoggerFactory.getLogger(this.getClass());
+    this.renewalThreshold = renewalThreshold;
+    this.extensionDuration = extensionDuration;
   }
 
   // 레디스를 통해 티켓 번호 증가하여 get > 토큰 발급 > 카푸카 메시지 발생 > (에러생길시) 레디스의 마지막 티켓 번호 감소
@@ -63,7 +71,7 @@ public class TicketService {
     try {
       Ticket ticket = tokenService.generateTicketNumber(productId, userUUID, newTicketNumber,
           orderId);
-      Claims claims = tokenService.validateTokenAndGetClaims(ticket.jwtToken());
+      tokenService.validateTokenAndGetClaims(ticket.jwtToken());
 
       QueueMessage queueMessage = new QueueMessage(newTicketNumber, productId, userUUID,
           ticket.jwtToken());
@@ -122,8 +130,10 @@ public class TicketService {
     long now = System.currentTimeMillis();
     long timeUntilExpiration = expiration.getTime() - now;
 
-    if (timeUntilExpiration <= 1000L * 60L * 30L) {
-      return tokenService.extendTicketJwtExpiration(jwtToken, 1000L * 60L * 60L);
+    // 갱신 기준 시간을 설정 값으로 가져옴
+    if (timeUntilExpiration <= renewalThreshold.toMillis()) {
+      // 연장 시간을 설정 값으로 가져옴
+      return tokenService.extendTicketJwtExpiration(jwtToken, extensionDuration.toMillis());
     } else {
       return jwtToken;
     }
