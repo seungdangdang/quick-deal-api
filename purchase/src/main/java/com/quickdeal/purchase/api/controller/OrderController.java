@@ -6,7 +6,6 @@ import com.quickdeal.purchase.domain.OrderResource;
 import com.quickdeal.purchase.domain.Ticket;
 import com.quickdeal.purchase.service.OrderService;
 import com.quickdeal.purchase.service.PurchaseHandlerService;
-import com.quickdeal.purchase.service.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,14 +21,11 @@ public class OrderController {
 
   private final PurchaseHandlerService purchaseHandlerService;
   private final OrderService orderService;
-  private final TokenService tokenService;
   private final Logger log;
 
-  public OrderController(PurchaseHandlerService orderHandlerService, OrderService orderService,
-      TokenService tokenService) {
+  public OrderController(PurchaseHandlerService orderHandlerService, OrderService orderService) {
     this.purchaseHandlerService = orderHandlerService;
     this.orderService = orderService;
-    this.tokenService = tokenService;
     this.log = LoggerFactory.getLogger(OrderController.class);
   }
 

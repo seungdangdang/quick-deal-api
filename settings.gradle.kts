@@ -1,4 +1,4 @@
-rootProject.name = "quick-deal"
+rootProject.name = "quick-deal-api"
 include("core")
 include("common")
 include("purchase")
