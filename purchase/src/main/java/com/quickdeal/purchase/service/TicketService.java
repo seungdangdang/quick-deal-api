@@ -1,7 +1,5 @@
 package com.quickdeal.purchase.service;
 
-import static com.quickdeal.purchase.util.LuaUtil.loadLuaScript;
-
 import com.quickdeal.common.exception.MaxUserLimitExceededException;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.purchase.domain.PageAccessStatuses;
@@ -9,7 +7,6 @@ import com.quickdeal.purchase.domain.PaymentPageAccessStatus;
 import com.quickdeal.purchase.domain.QueueMessage;
 import com.quickdeal.purchase.domain.Ticket;
 import io.jsonwebtoken.Claims;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -102,7 +99,12 @@ public class TicketService {
     }
 
     Long lastExitedQueueNumber = redisService.getLastExitedQueueNumber(productId);
+
     long remainingInQueue = queueNumber - lastExitedQueueNumber;
+    if (queueNumber <= maxPaymentPageUsers) {
+      remainingInQueue = 0;
+    }
+
     log.debug(
         "[getPaymentPageAccessStatusByTicket] this queueNumber: {}, lastExitedQueueNumber: {}, remainingInQueue: {}",
         queueNumber, lastExitedQueueNumber, remainingInQueue);
@@ -153,10 +155,65 @@ public class TicketService {
   // :: 페이지 액세스 확인 with 재실행
   public void validateAccessWithRetryLimit(String userId, Long productId, Long ticketNumber)
       throws InterruptedException {
+    String luaScript = """
+        local productId = KEYS[1]
+        local ticketNumber = tonumber(ARGV[1])
+        local userId = ARGV[2]
+        local maxPaymentPageUsers = tonumber(ARGV[3])
+        
+        -- 키 변수화
+        local paymentPageUserCountKey = "product:" .. productId .. ":paymentPageUser"
+        local lastExitedQueueNumberKey = "product:" .. productId .. ":lastExitedQueueNumber"
+        
+        -- 현재 접속자 수 확인
+        local currentAccessCount = redis.call("SCARD", paymentPageUserCountKey)
+        redis.log(redis.LOG_NOTICE, tostring(currentAccessCount) .. "명 접속중입니다.")
+        
+        -- UUID 가 있는지 검토
+        local isUserPresent = redis.call("SISMEMBER", paymentPageUserCountKey, userId)
+        
+        if currentAccessCount < maxPaymentPageUsers and isUserPresent == 0 then
+            redis.call("SADD", paymentPageUserCountKey, userId)
+        
+            local previousQueueNumber = redis.call("GET", lastExitedQueueNumberKey)
+            local status, err = pcall(function()
+                -- 마지막 처리 대기열 번호 업데이트
+                redis.log(redis.LOG_NOTICE, "업데이트된 티켓 넘버 " .. tostring(ticketNumber))
+                redis.call("SET", lastExitedQueueNumberKey, ticketNumber)
+            end)
+        
+            if not status then
+                redis.log(redis.LOG_WARNING, "pcall 오류 발생: " .. err)
+        
+                local rollbackStatus, rollbackErr = pcall(function()
+                    redis.call("SREM", paymentPageUserCountKey, userId)
+                end)
+                if not rollbackStatus then
+                    redis.log(redis.LOG_WARNING, "접속자 수 롤백 중 오류 발생: " .. rollbackErr)
+                end
+        
+                local queueRollbackStatus, queueRollbackErr = pcall(function()
+                    if previousQueueNumber then
+                        redis.call("SET", lastExitedQueueNumberKey, previousQueueNumber)
+                    else
+                        redis.call("DEL", lastExitedQueueNumberKey)
+                    end
+                end)
+                if not queueRollbackStatus then
+                    redis.log(redis.LOG_WARNING, "대기열 번호 롤백 중 오류 발생: " .. queueRollbackErr)
+                end
+        
+                return redis.error_reply("작업 중 오류가 발생하여 롤백되었습니다.")
+            end
+        
+            return 1
+        else
+            return 0
+        end
+        """;
+
     for (int i = 0; i < retryLimit; i++) {
       try {
-        String luaScript = loadLuaScript(
-            "purchase/src/main/java/com/quickdeal/purchase/service/validateQueueStatusAndUpdateQueueNumber.lua");
         List<String> keys = Collections.singletonList(productId.toString());
         List<String> args = Arrays.asList(ticketNumber.toString(), userId,
             String.valueOf(maxPaymentPageUsers));
@@ -168,8 +225,6 @@ public class TicketService {
           productService.decreaseStockQuantityById(productId);
           return;
         }
-      } catch (IOException e) {
-        log.error("Lua 스크립트 실행 중 네트워크 오류 발생");
       } catch (JedisDataException e) {
         log.error("Lua 스크립트 실행 중 redis.call 오류 발생");
       }

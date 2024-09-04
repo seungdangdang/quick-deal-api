@@ -30,7 +30,7 @@ public class KafkaQueueConsumer {
   }
 
   @KafkaListener(topics = {"queue-1", "queue-2", "queue-3", "queue-4",
-      "queue-5", "queue-33"}, groupId = "payment-consumer-group")
+      "queue-5", "queue-51", "queue-47"}, groupId = "payment-consumer-group")
   public void consume(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) {
     log.debug("[consume] message with offset: {}", record.offset());
     try {
