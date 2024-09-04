@@ -82,7 +82,7 @@ public class PurchaseHandlerService {
     log.debug("[handleCancelPayment] item sold out > cancel. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.CANCEL,
         PaymentStatusType.CANCEL);
-    redisService.removePaymentPageUser(orderId, userId);
+    redisService.removePaymentPageUser(orderId, userId); //TODO: 컨슘 전(대기 창)에 취소를 하면 해당 로직이 무효가 됨
     return orderService.getOrderInfo(orderId);
   }
 }

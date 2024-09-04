@@ -5,12 +5,17 @@ import com.quickdeal.purchase.domain.PaymentPageAccessStatus;
 public record PaymentPageAccessStatusResource(
     String status,
     Long numberOfRemainingInQueue,
-    String renewedQueueToken
+    String renewedQueueToken,
+    long timeLimit
 ) {
 
-  public static PaymentPageAccessStatusResource from(PaymentPageAccessStatus status) {
+  public static PaymentPageAccessStatusResource from(
+      PaymentPageAccessStatus status,
+      long timeLimit) {
     return new PaymentPageAccessStatusResource(
-        status.status().toString(), status.numberOfRemainingInQueue(),
-        status.renewedQueueToken());
+        status.status().toString(),
+        status.numberOfRemainingInQueue(),
+        status.renewedQueueToken(),
+        timeLimit);
   }
 }
