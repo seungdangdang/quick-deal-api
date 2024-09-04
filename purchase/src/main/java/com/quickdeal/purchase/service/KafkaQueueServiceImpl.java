@@ -34,14 +34,15 @@ public class KafkaQueueServiceImpl implements MessageQueueProducer {
       Claims claims = tokenService.validateTokenAndGetClaims(token);
       String messageString = objectMapper.writeValueAsString(message);
       log.info("[publishMessage] message with orderId: {} userId: {}",
-          message.userUUID(), claims.get("order_id"));
+          message.userId(), claims.get("order_id"));
 
       CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic,
           messageString);
 
       future.whenComplete((result, ex) -> {
         if (ex == null) {
-          log.info("[publishMessage] Message sent successfully to topic: {}, partition: {}, offset: {}",
+          log.info(
+              "[publishMessage] Message sent successfully to topic: {}, partition: {}, offset: {}",
               result.getRecordMetadata().topic(),
               result.getRecordMetadata().partition(),
               result.getRecordMetadata().offset());
@@ -49,8 +50,6 @@ public class KafkaQueueServiceImpl implements MessageQueueProducer {
           log.error("[publishMessage] Failed to send message to topic: {}", topic, ex);
         }
       });
-
-//      kafkaTemplate.send(topic, objectMapper.writeValueAsString(message));
     } catch (JsonProcessingException e) {
       // todo - 예외처리
     }

@@ -11,7 +11,6 @@ public record ProductResource(
     String name,
     String description,
     Integer price,
-    Integer stockQuantity,
     Instant createdAt,
     Instant updatedAt
 ) {
@@ -24,7 +23,6 @@ public record ProductResource(
         product.name(),
         product.description(),
         product.price(),
-        product.stockQuantity(),
         product.createdAt(),
         product.updatedAt()
     );

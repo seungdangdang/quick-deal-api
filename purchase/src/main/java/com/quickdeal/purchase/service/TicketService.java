@@ -66,15 +66,15 @@ public class TicketService {
   // :: 대기열 토큰 발급
   // :: 메시지큐 대기 메시지 삽입
   //TODO - 카프카 작업 트랜잭션 필요
-  public Ticket issueTicket(String userUUID, Long productId, Long orderId) {
+  public Ticket issueTicket(String userId, Long productId, Long orderId) {
     Long newTicketNumber = redisService.getNewTicketNumber(productId);
     try {
-      Ticket ticket = tokenService.generateTicketNumber(productId, userUUID, newTicketNumber,
+      Ticket ticket = tokenService.generateTicketNumber(productId, userId, newTicketNumber,
           orderId);
-      tokenService.validateTokenAndGetClaims(ticket.jwtToken());
+      tokenService.validateTokenAndGetClaims(ticket.ticketToken());
 
-      QueueMessage queueMessage = new QueueMessage(newTicketNumber, productId, userUUID,
-          ticket.jwtToken());
+      QueueMessage queueMessage = new QueueMessage(newTicketNumber, productId, userId,
+          ticket.ticketToken());
 
       messageQueueService.publishMessage(topicHeader + productId, queueMessage);
 
@@ -103,7 +103,6 @@ public class TicketService {
     }
 
     Long lastExitedQueueNumber = redisService.getLastExitedQueueNumber(productId);
-
     long remainingInQueue = queueNumber - lastExitedQueueNumber;
     log.debug(
         "[getPaymentPageAccessStatusByTicket] this queueNumber: {}, lastExitedQueueNumber: {}, remainingInQueue: {}",
@@ -155,14 +154,14 @@ public class TicketService {
   }
 
   // :: 페이지 액세스 확인 with 재실행
-  public void validateAccessWithRetryLimit(String userUUID, Long productId, Long ticketNumber)
+  public void validateAccessWithRetryLimit(String userId, Long productId, Long ticketNumber)
       throws InterruptedException {
     for (int i = 0; i < retryLimit; i++) {
       try {
         String luaScript = loadLuaScript(
             "purchase/src/main/java/com/quickdeal/purchase/service/script.lua");
         List<String> keys = Collections.singletonList(productId.toString());
-        List<String> args = Arrays.asList(ticketNumber.toString(), userUUID,
+        List<String> args = Arrays.asList(ticketNumber.toString(), userId,
             String.valueOf(maxPaymentPageUsers));
 
         Object result = redisService.executeLuaScript(luaScript, keys, args);

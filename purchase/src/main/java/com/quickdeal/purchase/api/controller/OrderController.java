@@ -34,7 +34,7 @@ public class OrderController {
   @PostMapping("/orders")
   public QueueTokenResource createOrderAndProcessQueue(
       @RequestBody OrderCreateRequestBody requestBody) {
-    log.debug("<controller> [orders] start orders, UUID : {}", requestBody.userUUID());
+    log.debug("<controller> [orders] start orders, UUID : {}", requestBody.userId());
     Ticket token = purchaseHandlerService.getTicket(requestBody.toCommand());
     return QueueTokenResource.from(token);
   }

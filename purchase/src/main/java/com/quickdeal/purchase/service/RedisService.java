@@ -63,8 +63,8 @@ public class RedisService {
 //    stringValueRedisTemplate.opsForValue().increment(key, 1L);
 //  }
 
-  public void removePaymentPageUser(Long productId, String userUUID) {
+  public void removePaymentPageUser(Long productId, String userId) {
     String key = RedisConfig.getPaymentPageUserKey(productId);
-    stringValueRedisTemplate.opsForSet().remove(key, userUUID);
+    stringValueRedisTemplate.opsForSet().remove(key, userId);
   }
 }

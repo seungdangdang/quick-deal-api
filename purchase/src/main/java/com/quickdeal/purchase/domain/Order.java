@@ -4,7 +4,7 @@ import java.time.Instant;
 
 public record Order(
     Long id,
-    String userUUID,
+    String userId,
     OrderStatusType status,
     Instant createdAt,
     Instant updatedAt

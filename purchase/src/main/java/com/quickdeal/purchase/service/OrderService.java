@@ -1,6 +1,5 @@
 package com.quickdeal.purchase.service;
 
-import com.quickdeal.common.exception.OrderStatusInvalidException;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.common.service.domain.Product;
 import com.quickdeal.purchase.domain.Order;
@@ -41,11 +40,11 @@ public class OrderService {
 
   // :: 주문과 결제 초기 데이터 저장
   @Transactional
-  public Order saveOrderAndPaymentInitialData(String userUUID, Long productId, Integer quantity) {
+  public Order saveOrderAndPaymentInitialData(String userId, Long productId, Integer quantity) {
     int price = productService.getPriceById(productId);
     int totalAmount = price * quantity;
 
-    OrderEntity orderEntity = OrderEntity.createOrder(userUUID);
+    OrderEntity orderEntity = OrderEntity.createOrder(userId);
 
     OrderProductEntity orderProductEntity = OrderProductEntity.createOrderProduct(orderEntity,
         productId, quantity, price);
@@ -56,7 +55,6 @@ public class OrderService {
 
     orderProductRepository.save(orderProductEntity);
 
-//    paymentService.createPayment(paymentEntity);
     PaymentEntity savedPaymentEntity = paymentService.createPayment(paymentEntity);
     log.debug("[saveOrderAndPaymentInitialData] creteOrderInitial: {}, createPaymentInitial: {}",
         orderEntity, savedPaymentEntity.toString());

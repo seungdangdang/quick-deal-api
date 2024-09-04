@@ -3,7 +3,7 @@ package com.quickdeal.purchase.domain;
 import com.quickdeal.common.exception.BusinessRuleViolation;
 
 public record OrderCreationCommand(
-    String userUUID,
+    String userId,
     QuantityPerProduct quantityPerProduct
 ) {
 

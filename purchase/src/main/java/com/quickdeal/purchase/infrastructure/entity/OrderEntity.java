@@ -24,8 +24,8 @@ public class OrderEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "user_uuid", nullable = false)
-  private String userUUID;
+  @Column(name = "user_id", nullable = false)
+  private String userId;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "process_status", nullable = false)
@@ -48,9 +48,9 @@ public class OrderEntity {
   @OneToOne(mappedBy = "order")
   private PaymentEntity payment;
 
-  public static OrderEntity createOrder(String userUUID) {
+  public static OrderEntity createOrder(String userId) {
     OrderEntity order = new OrderEntity();
-    order.userUUID = userUUID;
+    order.userId = userId;
     order.processStatus = OrderStatusType.PROCESSING;
     return order;
   }
@@ -58,7 +58,7 @@ public class OrderEntity {
   public Order toOrder() {
     return new Order(
         id,
-        userUUID,
+        userId,
         processStatus,
         createdAt,
         updatedAt

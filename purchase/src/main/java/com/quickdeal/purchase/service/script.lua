@@ -1,6 +1,6 @@
 local productId = KEYS[1]
 local ticketNumber = tonumber(ARGV[1])
-local userUUID = ARGV[2]
+local userId = ARGV[2]
 local maxPaymentPageUsers = tonumber(ARGV[3])
 
 -- 키 변수화
@@ -12,10 +12,10 @@ local currentAccessCount = redis.call("SCARD", paymentPageUserCountKey)
 redis.log(redis.LOG_NOTICE, tostring(currentAccessCount) .. "명 접속중입니다.")
 
 -- UUID 가 있는지 검토
-local isUserPresent = redis.call("SISMEMBER", paymentPageUserCountKey, userUUID)
+local isUserPresent = redis.call("SISMEMBER", paymentPageUserCountKey, userId)
 
 if currentAccessCount < maxPaymentPageUsers and isUserPresent == 0 then
-    redis.call("SADD", paymentPageUserCountKey, userUUID)
+    redis.call("SADD", paymentPageUserCountKey, userId)
 
     local previousQueueNumber = redis.call("GET", lastExitedQueueNumberKey)
     local status, err = pcall(function()
@@ -28,7 +28,7 @@ if currentAccessCount < maxPaymentPageUsers and isUserPresent == 0 then
         redis.log(redis.LOG_WARNING, "pcall 오류 발생: " .. err)
 
         local rollbackStatus, rollbackErr = pcall(function()
-            redis.call("SREM", paymentPageUserCountKey, userUUID)
+            redis.call("SREM", paymentPageUserCountKey, userId)
         end)
         if not rollbackStatus then
             redis.log(redis.LOG_WARNING, "접속자 수 롤백 중 오류 발생: " .. rollbackErr)

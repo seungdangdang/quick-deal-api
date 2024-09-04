@@ -30,7 +30,7 @@ public class KafkaQueueConsumer {
   }
 
   @KafkaListener(topics = {"queue-1", "queue-2", "queue-3", "queue-4",
-      "queue-5"}, groupId = "payment-consumer-group")
+      "queue-5", "queue-33"}, groupId = "payment-consumer-group")
   public void consume(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) {
     log.debug("[consume] message with offset: {}", record.offset());
     try {
@@ -38,11 +38,11 @@ public class KafkaQueueConsumer {
       String token = queueMessage.ticketToken(); //TODO: ticketToken 은 나중에 삭제할 것
       Claims claims = tokenService.validateTokenAndGetClaims(token); //TODO: ticketToken 은 나중에 삭제할 것
       log.debug("[consume] message with orderId: {} userId: {}", claims.get("order_id"),
-          queueMessage.userUUID());
+          queueMessage.userId());
       queueService.validateTicketAndPaymentPageAccessible(queueMessage);
       acknowledgment.acknowledge();
       log.debug("[consume] offset committed successfully with orderId: {} userId: {}",
-          claims.get("order_id"), queueMessage.userUUID());
+          claims.get("order_id"), queueMessage.userId());
     } catch (MaxUserLimitExceededException e) {
       acknowledgment.nack(Duration.ofMillis(500));
     } catch (JsonProcessingException e) {
