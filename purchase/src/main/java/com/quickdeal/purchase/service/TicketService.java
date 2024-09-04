@@ -2,7 +2,6 @@ package com.quickdeal.purchase.service;
 
 import static com.quickdeal.purchase.util.LuaUtil.loadLuaScript;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.quickdeal.common.exception.MaxUserLimitExceededException;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.purchase.domain.PageAccessStatuses;
@@ -141,16 +140,14 @@ public class TicketService {
   @Transactional
   // :: 페이지 접근 가능 여부 확인
   public void validateTicketAndPaymentPageAccessible(QueueMessage message)
-      throws JsonProcessingException, InterruptedException {
+      throws InterruptedException {
     // 유효 토큰 검증
     Claims claims = tokenService.validateTokenAndGetClaims(message.ticketToken());
-
-    // 진행중인 주문인지 검증
     Long orderId = claims.get("order_id", Long.class);
+    // 진행중인 주문인지 검증
     orderService.validateAvailableOrder(orderId);
-
     // 페이지 접속자 확인
-    validateAccessWithRetryLimit(message.userUUID(), message.productId(), message.ticketNumber());
+    validateAccessWithRetryLimit(message.userId(), message.productId(), message.ticketNumber());
   }
 
   // :: 페이지 액세스 확인 with 재실행
@@ -159,7 +156,7 @@ public class TicketService {
     for (int i = 0; i < retryLimit; i++) {
       try {
         String luaScript = loadLuaScript(
-            "purchase/src/main/java/com/quickdeal/purchase/service/script.lua");
+            "purchase/src/main/java/com/quickdeal/purchase/service/validateQueueStatusAndUpdateQueueNumber.lua");
         List<String> keys = Collections.singletonList(productId.toString());
         List<String> args = Arrays.asList(ticketNumber.toString(), userId,
             String.valueOf(maxPaymentPageUsers));
