@@ -6,16 +6,20 @@ public record PaymentPageAccessStatusResource(
     String status,
     Long numberOfRemainingInQueue,
     String renewedQueueToken,
-    long timeLimit
+    long expiredAtEpochSeconds,
+    long ticketNumber
 ) {
 
   public static PaymentPageAccessStatusResource from(
       PaymentPageAccessStatus status,
-      long timeLimit) {
+      long timeLimit,
+      long ticketNumber) {
     return new PaymentPageAccessStatusResource(
         status.status().toString(),
         status.numberOfRemainingInQueue(),
         status.renewedQueueToken(),
-        timeLimit);
+        timeLimit,
+        ticketNumber
+    );
   }
 }
