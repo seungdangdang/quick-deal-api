@@ -17,11 +17,11 @@ public class PurchaseHandlerService {
   private final PaymentService paymentService;
   private final TicketService queueService;
   private final OrderService orderService;
-  private final RedisService redisService;
+  private final InMemoryService redisService;
   private final Logger log;
 
   public PurchaseHandlerService(PaymentService paymentService, TicketService queueService,
-      OrderService orderService, RedisService redisService) {
+      OrderService orderService, InMemoryService redisService) {
     this.paymentService = paymentService;
     this.queueService = queueService;
     this.orderService = orderService;

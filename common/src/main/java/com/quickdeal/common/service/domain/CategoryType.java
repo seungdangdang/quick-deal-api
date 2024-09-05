@@ -19,7 +19,8 @@ public enum CategoryType {
   STATIONERY_OFFICE("문구/오피스"),
   PET_SUPPLIES("반려동물용품"),
   HEALTH_SUPPLEMENTS("헬스/건강식품"),
-  TRAVEL_TICKETS("여행/티켓");
+  TRAVEL_TICKETS("여행/티켓"),
+  GIFT("선물");
 
   private final String name;
 

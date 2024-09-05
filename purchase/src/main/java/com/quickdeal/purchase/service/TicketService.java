@@ -29,7 +29,7 @@ public class TicketService {
   private final String topicHeader;
   private final ProductService productService;
   private final MessageQueueProducer messageQueueService;
-  private final RedisService redisService;
+  private final InMemoryService redisService;
   private final OrderService orderService;
   private final Logger log;
   private final Duration renewalThreshold;
@@ -43,7 +43,7 @@ public class TicketService {
       @Value("${ticket-token.extension-duration}") Duration extensionDuration,
       TokenService tokenService,
       ProductService productService, MessageQueueProducer messageQueueService,
-      RedisService redisService, OrderService orderService) {
+      InMemoryService redisService, OrderService orderService) {
     this.retryDelay = retryDelay;
     this.retryLimit = retryLimit;
     this.maxPaymentPageUsers = maxPaymentPageUsers;
@@ -88,26 +88,26 @@ public class TicketService {
     Claims claims = tokenService.validateTokenAndGetClaims(ticketToken);
 
     Long productId = claims.get("product_id", Long.class);
-    Long queueNumber = claims.get("queue_number", Long.class);
+    Long ticketNumber = claims.get("ticket_number", Long.class);
     log.debug(
         "[getPaymentPageAccessStatusByTicket] start checkQueueStatus, orderId: {}, queueNumber: {}",
-        claims.get("order_id"), queueNumber);
+        claims.get("order_id"), ticketNumber);
 
     if (!productService.hasCachingStockQuantityById(productId)) {
       log.debug("[getPaymentPageAccessStatusByTicket] caching stock quantity");
       return new PaymentPageAccessStatus(PageAccessStatuses.ITEM_SOLD_OUT, null, null);
     }
 
-    Long lastExitedQueueNumber = redisService.getLastExitedQueueNumber(productId);
+    Long lastExitedQueueNumber = redisService.getLastExitedTicketNumber(productId);
 
-    long remainingInQueue = queueNumber - lastExitedQueueNumber;
-    if (queueNumber <= maxPaymentPageUsers) {
+    long remainingInQueue = ticketNumber - lastExitedQueueNumber;
+    if (ticketNumber <= maxPaymentPageUsers) {
       remainingInQueue = 0;
     }
 
     log.debug(
         "[getPaymentPageAccessStatusByTicket] this queueNumber: {}, lastExitedQueueNumber: {}, remainingInQueue: {}",
-        queueNumber, lastExitedQueueNumber, remainingInQueue);
+        ticketNumber, lastExitedQueueNumber, remainingInQueue);
 
     if (remainingInQueue <= 0) {
       log.debug("[getPaymentPageAccessStatusByTicket] ACCESS_GRANTED, orderId: {}",

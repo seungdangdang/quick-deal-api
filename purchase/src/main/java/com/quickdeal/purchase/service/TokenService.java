@@ -35,7 +35,9 @@ public class TokenService {
       Long orderId) {
     Date now = new Date();
     String token = Jwts.builder().setHeaderParam("type", "jwt").claim("product_id", productId)
-        .claim("user_id", userId).claim("queue_number", ticketNumber).claim("order_id", orderId)
+        .claim("user_id", userId)
+        .claim("ticket_number", ticketNumber)
+        .claim("order_id", orderId)
         .setIssuedAt(now).setExpiration(new Date(now.getTime() + expiration.toMillis()))
         .signWith(hmacKey).compact();
 

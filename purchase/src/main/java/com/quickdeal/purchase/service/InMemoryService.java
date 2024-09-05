@@ -9,19 +9,19 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
 @Service
-public class RedisService {
+public class InMemoryService {
 
   private final Logger log;
   private final RedisTemplate<String, Long> longValueRedisTemplate;
   private final RedisTemplate<String, String> stringValueRedisTemplate;
   private final Jedis jedis;
 
-  public RedisService(RedisTemplate<String, Long> redisTemplate,
+  public InMemoryService(RedisTemplate<String, Long> redisTemplate,
       RedisTemplate<String, String> stringValueRedisTemplate, Jedis jedis) {
     this.longValueRedisTemplate = redisTemplate;
     this.stringValueRedisTemplate = stringValueRedisTemplate;
     this.jedis = jedis;
-    this.log = LoggerFactory.getLogger(RedisService.class);
+    this.log = LoggerFactory.getLogger(InMemoryService.class);
   }
 
   public Object executeLuaScript(String script, List<String> keys, List<String> args) {
@@ -45,7 +45,7 @@ public class RedisService {
   }
 
   // 레디스에서 마지막으로 대기열에서 빠져나간 대기번호 가져오는 코드
-  public Long getLastExitedQueueNumber(Long productId) {
+  public Long getLastExitedTicketNumber(Long productId) {
     String key = RedisConfig.getLastExitedQueueNumberKey(productId);
     Object value = longValueRedisTemplate.opsForValue().get(key);
     return value != null ? Long.parseLong(String.valueOf(value)) : 0L;
