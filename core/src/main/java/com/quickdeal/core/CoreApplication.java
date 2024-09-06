@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
     "com.quickdeal.purchase",
     "com.quickdeal.product",
     "com.quickdeal.user",
+    "com.quickdeal.auth",
     "com.quickdeal.scheduler"
 })
 @EnableJpaRepositories(basePackages = {

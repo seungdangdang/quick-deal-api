@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":purchase"))
     implementation(project(":product"))
     implementation(project(":user"))
+    implementation(project(":auth"))
     implementation(project(":scheduler"))
     implementation("org.flywaydb:flyway-core:${Versions.FLYWAY}")
     implementation("org.flywaydb:flyway-mysql")
