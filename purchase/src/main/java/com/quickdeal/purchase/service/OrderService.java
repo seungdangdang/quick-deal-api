@@ -64,7 +64,7 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public OrderInfo getOrderInfo(Long orderId) {
+  public OrderInfo getOrderDetailInfo(Long orderId) {
     Order order = getOrder(orderId);
     OrderProduct orderProduct = orderProductRepository.findByOrderId(orderId).toOrderProduct();
     Product product = productService.getProduct(orderProduct.productId());

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PurchaseHandlerService {
+public class PurchaseService {
 
   private final PaymentService paymentService;
   private final TicketService ticketService;
@@ -19,7 +19,7 @@ public class PurchaseHandlerService {
   private final InMemoryService inMemoryService;
   private final Logger log;
 
-  public PurchaseHandlerService(PaymentService paymentService, TicketService ticketService,
+  public PurchaseService(PaymentService paymentService, TicketService ticketService,
       OrderService orderService, InMemoryService inMemoryService) {
     this.paymentService = paymentService;
     this.ticketService = ticketService;
@@ -30,7 +30,7 @@ public class PurchaseHandlerService {
 
   // :: 주문을 생성하고, 대기열 토큰을 발급하고, 큐잉을 진행함
   // TODO: rdb + kafka 간 트랜잭션 적용
-  public Ticket getTicket(OrderCreationCommand command) {
+  public Ticket saveOrderAndGetTicket(OrderCreationCommand command) {
     String userId = command.userId();
     Long productId = command.quantityPerProduct().productId();
     Integer quantity = command.quantityPerProduct().quantity();
@@ -44,24 +44,25 @@ public class PurchaseHandlerService {
 
   // :: 결제 진행 후 주문, 결제 상태 업데이트
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  public PaymentStatus payment(Long orderId, Long productId, Integer paymentAmount,
+  public PaymentStatus paymentAndGetPaymentStatus(Long orderId, Long productId,
+      Integer paymentAmount,
       String userId) {
     PaymentStatus status = paymentService.getPaymentStatus(orderId, productId, paymentAmount);
     log.debug("[payment-service] finished payment, status: {}, orderId: {}", status.status(),
         orderId);
 
     if (status.isPaymentCompleted()) {
-      handlePaymentCompleteStatus(orderId, productId, userId);
+      PaymentCompletedProcess(orderId, productId, userId);
     } else if (status.isItemSoldOut()) {
-      updatePaymentCancellationStatus(orderId, productId, userId);
+      PaymentCancelProcess(orderId, productId, userId);
     } else {
-      handlePaymentFailed(orderId, productId, userId);
+      PaymentFailedProcess(orderId, productId, userId);
     }
     return status;
   }
 
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  private void handlePaymentFailed(Long orderId, Long productId, String userId) {
+  private void PaymentFailedProcess(Long orderId, Long productId, String userId) {
     log.debug("[handlePaymentFailed] payment not completed. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.ERROR,
         PaymentStatusType.ERROR);
@@ -69,7 +70,7 @@ public class PurchaseHandlerService {
   }
 
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  private void handlePaymentCompleteStatus(Long orderId, Long productId, String userId) {
+  private void PaymentCompletedProcess(Long orderId, Long productId, String userId) {
     log.debug("[handlePaymentCompleteStatus] payment completed. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.DONE, PaymentStatusType.DONE);
     inMemoryService.removePaymentPageUser(productId, userId);
@@ -77,7 +78,7 @@ public class PurchaseHandlerService {
 
   // :: 결제 취소 - 주문 / 결제 정보업데이트
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  public void updatePaymentCancellationStatus(Long orderId, Long productId, String userId) {
+  public void PaymentCancelProcess(Long orderId, Long productId, String userId) {
     log.debug("[handleCancelPayment] cancel. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.CANCEL,
         PaymentStatusType.CANCEL);

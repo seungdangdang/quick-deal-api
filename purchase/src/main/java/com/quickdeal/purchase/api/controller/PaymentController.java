@@ -2,7 +2,7 @@ package com.quickdeal.purchase.api.controller;
 
 import com.quickdeal.purchase.api.resource.PaymentStatusResource;
 import com.quickdeal.purchase.domain.PaymentStatus;
-import com.quickdeal.purchase.service.PurchaseHandlerService;
+import com.quickdeal.purchase.service.PurchaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentController {
 
   private final Logger log;
-  private final PurchaseHandlerService purchaseHandlerService;
+  private final PurchaseService purchaseHandlerService;
 
-  public PaymentController(PurchaseHandlerService orderHandlerService) {
+  public PaymentController(PurchaseService orderHandlerService) {
     this.log = LoggerFactory.getLogger(PaymentController.class);
     this.purchaseHandlerService = orderHandlerService;
   }
@@ -25,7 +25,7 @@ public class PaymentController {
   @PostMapping("/products/{productId}/payment")
   public PaymentStatusResource payment(@PathVariable Long productId,
       @RequestBody PaymentRequestBody requestBody) {
-    PaymentStatus result = purchaseHandlerService.payment(requestBody.orderId(), productId,
+    PaymentStatus result = purchaseHandlerService.paymentAndGetPaymentStatus(requestBody.orderId(), productId,
         requestBody.paymentAmount(), requestBody.userId());
     log.debug("<controller> [payment] finished payment, resultStatus: {}, orderId: {}",
         result.status(), result.orderId());

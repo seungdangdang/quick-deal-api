@@ -34,7 +34,7 @@ public class QueueController {
   public PaymentPageAccessStatusResource validQueueStatus(
       @RequestParam String ticketToken) {
     Claims claims = tokenService.validateTokenAndGetClaims(ticketToken);
-    PaymentPageAccessStatus queueStatus = queueService.getPaymentPageAccessStatusByTicket(
+    PaymentPageAccessStatus queueStatus = queueService.getPaymentPageAccessStatus(
         ticketToken);
     log.debug(
         "<controller> [validQueueStatus] finished queue poll, orderId: {}, polling status: {}",

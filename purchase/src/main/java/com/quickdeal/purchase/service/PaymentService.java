@@ -2,11 +2,12 @@ package com.quickdeal.purchase.service;
 
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.purchase.domain.PaymentStatus;
-import com.quickdeal.purchase.domain.PaymentStatuses;
 import com.quickdeal.purchase.domain.PaymentStatusType;
+import com.quickdeal.purchase.domain.PaymentStatuses;
 import com.quickdeal.purchase.infrastructure.entity.PaymentEntity;
 import com.quickdeal.purchase.infrastructure.repository.PaymentRepository;
 import java.time.Instant;
+import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,10 @@ public class PaymentService {
   public PaymentStatus getPaymentStatus(Long orderId, Long productId, Integer paymentAmount) {
     try {
       if (productService.hasStockQuantityById(productId)) {
-        //TODO: 결제처리
+        //TODO: 결제로직 필요, 현재 임시로 30초~2분의 지연이 있도록 설정
+        int randomDelayInSeconds = ThreadLocalRandom.current().nextInt(30, 121);
+        Thread.sleep(randomDelayInSeconds * 1000L);
+
         return new PaymentStatus(PaymentStatuses.PAYMENT_COMPLETED, orderId,
             paymentAmount);
       }
