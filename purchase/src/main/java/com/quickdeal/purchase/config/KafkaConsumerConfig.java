@@ -1,7 +1,10 @@
 package com.quickdeal.purchase.config;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +28,7 @@ public class KafkaConsumerConfig {
     config.put(ConsumerConfig.GROUP_ID_CONFIG, "payment-consumer-group");
     config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1); // 한 번에 하나의 메시지만 폴링
+    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
     return new DefaultKafkaConsumerFactory<>(config);
   }
 
@@ -35,5 +38,12 @@ public class KafkaConsumerConfig {
     factory.setConsumerFactory(consumerFactory());
     factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
     return factory;
+  }
+
+  @Bean
+  public List<String> topicList() {
+    return IntStream.rangeClosed(1, 40)
+        .mapToObj(i -> "queue-" + i)
+        .collect(Collectors.toList());
   }
 }
