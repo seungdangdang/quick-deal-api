@@ -63,13 +63,10 @@ public class OrderService {
     return savedOrder.toOrder();
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public OrderInfo getOrderInfo(Long orderId) {
-    Order order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId)).toOrder();
-
+    Order order = getOrder(orderId);
     OrderProduct orderProduct = orderProductRepository.findByOrderId(orderId).toOrderProduct();
-
     Product product = productService.getProduct(orderProduct.productId());
 
     OrderProductInfo orderProductInfo = new OrderProductInfo(orderProduct.id(), product.name(),
@@ -99,12 +96,17 @@ public class OrderService {
     }
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public void validateAvailableOrder(Long orderId) {
-    Order order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId)).toOrder();
+    Order order = getOrder(orderId);
     if (order.status() != OrderStatusType.PROCESSING) {
       throw new OrderStatusInvalidException("유효하지 않은 주문입니다.");
     }
+  }
+
+  @Transactional(readOnly = true)
+  public Order getOrder(Long orderId) {
+    return orderRepository.findById(orderId)
+        .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다: " + orderId)).toOrder();
   }
 }
