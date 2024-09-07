@@ -21,11 +21,11 @@ public class PaymentService {
     this.productService = productService;
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public PaymentStatus getPaymentStatus(Long orderId, Long productId, Integer paymentAmount) {
     try {
       if (productService.hasStockQuantityById(productId)) {
-        //TODO: 결제 처리 로직
+        //TODO: 결제처리
         return new PaymentStatus(PaymentStatuses.PAYMENT_COMPLETED, orderId,
             paymentAmount);
       }

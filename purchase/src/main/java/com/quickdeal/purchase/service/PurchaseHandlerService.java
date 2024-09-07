@@ -1,10 +1,9 @@
 package com.quickdeal.purchase.service;
 
-import com.quickdeal.purchase.domain.PaymentStatus;
 import com.quickdeal.purchase.domain.Order;
 import com.quickdeal.purchase.domain.OrderCreationCommand;
-import com.quickdeal.purchase.domain.OrderInfo;
 import com.quickdeal.purchase.domain.OrderStatusType;
+import com.quickdeal.purchase.domain.PaymentStatus;
 import com.quickdeal.purchase.domain.PaymentStatusType;
 import com.quickdeal.purchase.domain.Ticket;
 import org.slf4j.Logger;
@@ -15,17 +14,17 @@ import org.springframework.stereotype.Service;
 public class PurchaseHandlerService {
 
   private final PaymentService paymentService;
-  private final TicketService queueService;
+  private final TicketService ticketService;
   private final OrderService orderService;
-  private final InMemoryService redisService;
+  private final InMemoryService inMemoryService;
   private final Logger log;
 
-  public PurchaseHandlerService(PaymentService paymentService, TicketService queueService,
-      OrderService orderService, InMemoryService redisService) {
+  public PurchaseHandlerService(PaymentService paymentService, TicketService ticketService,
+      OrderService orderService, InMemoryService inMemoryService) {
     this.paymentService = paymentService;
-    this.queueService = queueService;
+    this.ticketService = ticketService;
     this.orderService = orderService;
-    this.redisService = redisService;
+    this.inMemoryService = inMemoryService;
     this.log = LoggerFactory.getLogger(this.getClass());
   }
 
@@ -40,7 +39,7 @@ public class PurchaseHandlerService {
     log.debug(
         "[getTicket] finished saveOrderAndPaymentInitialData, userId: {}, orderId : {}, orderStatus : {}",
         userId, order.id(), order.status());
-    return queueService.issueTicket(userId, productId, order.id());
+    return ticketService.issueTicket(userId, productId, order.id());
   }
 
   // :: 결제 진행 후 주문, 결제 상태 업데이트
@@ -54,7 +53,7 @@ public class PurchaseHandlerService {
     if (status.isPaymentCompleted()) {
       handlePaymentCompleteStatus(orderId, productId, userId);
     } else if (status.isItemSoldOut()) {
-      handleCancelPayment(orderId, userId);
+      updatePaymentCancellationStatus(orderId, productId, userId);
     } else {
       handlePaymentFailed(orderId, productId, userId);
     }
@@ -66,24 +65,23 @@ public class PurchaseHandlerService {
     log.debug("[handlePaymentFailed] payment not completed. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.ERROR,
         PaymentStatusType.ERROR);
-    redisService.removePaymentPageUser(productId, userId);
+    inMemoryService.removePaymentPageUser(productId, userId);
   }
 
   // TODO: rdb, 레디스 간 트랜잭션 필요
   private void handlePaymentCompleteStatus(Long orderId, Long productId, String userId) {
     log.debug("[handlePaymentCompleteStatus] payment completed. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.DONE, PaymentStatusType.DONE);
-    redisService.removePaymentPageUser(productId, userId);
+    inMemoryService.removePaymentPageUser(productId, userId);
   }
 
   // :: 결제 취소 - 주문 / 결제 정보업데이트
   // TODO: rdb, 레디스 간 트랜잭션 필요
-  public OrderInfo handleCancelPayment(Long orderId, String userId) {
-    log.debug("[handleCancelPayment] item sold out > cancel. userID: {}", userId);
+  public void updatePaymentCancellationStatus(Long orderId, Long productId, String userId) {
+    log.debug("[handleCancelPayment] cancel. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.CANCEL,
         PaymentStatusType.CANCEL);
-    //TODO: productId를 받아야 결제페이지에서 삭제 가능함
-    redisService.removePaymentPageUser(orderId, userId); //TODO: 컨슘 전(대기 창)에 취소를 하면 해당 로직이 무효가 됨
-    return orderService.getOrderInfo(orderId);
+    inMemoryService.removePaymentPageUser(productId,
+        userId); //TODO: 컨슘 전(대기 창)에 취소를 하면 해당 로직이 무효가 됨
   }
 }

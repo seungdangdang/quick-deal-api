@@ -22,7 +22,6 @@ public class ProductController {
   public ProductResourceList getProducts(ProductsRequestParams requestParams) {
     List<Product> products = productService.getProductList(requestParams.lastId());
     List<ProductResource> resources = products.stream().map(ProductResource::from).toList();
-
     return new ProductResourceList(resources);
   }
 

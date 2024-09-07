@@ -15,8 +15,8 @@ public class RedisConfig {
     return "product:" + productId + ":lastTicketNumber";
   }
 
-  public static String getLastExitedQueueNumberKey(Long productId) {
-    return "product:" + productId + ":lastExitedQueueNumber";
+  public static String getLastExitedTicketNumberKey(Long productId) {
+    return "product:" + productId + ":lastExitedTicketNumber";
   }
 
   public static String getPaymentPageUserKey(Long productId) {

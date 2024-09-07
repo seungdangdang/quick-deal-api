@@ -51,7 +51,7 @@ public class KafkaQueueServiceImpl implements MessageQueueProducer {
         }
       });
     } catch (JsonProcessingException e) {
-      // todo - 예외처리
+      throw new RuntimeException(e);
     }
   }
 }

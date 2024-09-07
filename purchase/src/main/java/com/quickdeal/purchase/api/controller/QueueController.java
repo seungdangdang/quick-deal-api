@@ -6,7 +6,6 @@ import com.quickdeal.purchase.service.TicketService;
 import com.quickdeal.purchase.service.TokenService;
 import io.jsonwebtoken.Claims;
 import java.time.Instant;
-import java.time.ZoneId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +39,6 @@ public class QueueController {
     log.debug(
         "<controller> [validQueueStatus] finished queue poll, orderId: {}, polling status: {}",
         claims.get("order_id"), queueStatus.status());
-
     long currentTimeInSeconds = Instant.now().getEpochSecond();
     long expiredAtEpochSeconds = currentTimeInSeconds + timeoutInSeconds;
     return PaymentPageAccessStatusResource.from(queueStatus, expiredAtEpochSeconds,

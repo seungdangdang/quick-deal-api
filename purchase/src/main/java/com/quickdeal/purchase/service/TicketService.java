@@ -29,7 +29,7 @@ public class TicketService {
   private final String topicHeader;
   private final ProductService productService;
   private final MessageQueueProducer messageQueueService;
-  private final InMemoryService redisService;
+  private final InMemoryService inMemoryService;
   private final OrderService orderService;
   private final Logger log;
   private final Duration renewalThreshold;
@@ -43,7 +43,7 @@ public class TicketService {
       @Value("${ticket-token.extension-duration}") Duration extensionDuration,
       TokenService tokenService,
       ProductService productService, MessageQueueProducer messageQueueService,
-      InMemoryService redisService, OrderService orderService) {
+      InMemoryService inMemoryService, OrderService orderService) {
     this.retryDelay = retryDelay;
     this.retryLimit = retryLimit;
     this.maxPaymentPageUsers = maxPaymentPageUsers;
@@ -51,7 +51,7 @@ public class TicketService {
     this.tokenService = tokenService;
     this.productService = productService;
     this.messageQueueService = messageQueueService;
-    this.redisService = redisService;
+    this.inMemoryService = inMemoryService;
     this.orderService = orderService;
     this.log = LoggerFactory.getLogger(this.getClass());
     this.renewalThreshold = renewalThreshold;
@@ -63,7 +63,7 @@ public class TicketService {
   // :: 메시지큐 대기 메시지 삽입
   //TODO - 카프카 작업 트랜잭션 필요
   public Ticket issueTicket(String userId, Long productId, Long orderId) {
-    Long newTicketNumber = redisService.getNewTicketNumber(productId);
+    Long newTicketNumber = inMemoryService.getNewTicketNumber(productId);
     try {
       Ticket ticket = tokenService.generateTicketNumber(productId, userId, newTicketNumber,
           orderId);
@@ -77,7 +77,7 @@ public class TicketService {
       return ticket;
     } catch (Exception e) {
       log.error("[issueTicket] failed to issueTicket", e);
-      redisService.decrementLastTicketNumber(productId);
+      inMemoryService.decrementLastTicketNumber(productId);
       log.error("[issueTicket] failed > finished redis rollback");
       throw e;
     }
@@ -90,7 +90,7 @@ public class TicketService {
     Long productId = claims.get("product_id", Long.class);
     Long ticketNumber = claims.get("ticket_number", Long.class);
     log.debug(
-        "[getPaymentPageAccessStatusByTicket] start checkQueueStatus, orderId: {}, queueNumber: {}",
+        "[getPaymentPageAccessStatusByTicket] start checkQueueStatus, orderId: {}, ticketNumber: {}",
         claims.get("order_id"), ticketNumber);
 
     if (!productService.hasCachingStockQuantityById(productId)) {
@@ -98,16 +98,16 @@ public class TicketService {
       return new PaymentPageAccessStatus(PageAccessStatuses.ITEM_SOLD_OUT, null, null);
     }
 
-    Long lastExitedQueueNumber = redisService.getLastExitedTicketNumber(productId);
+    Long lastExitedTicketNumber = inMemoryService.getLastExitedTicketNumber(productId);
 
-    long remainingInQueue = ticketNumber - lastExitedQueueNumber;
+    long remainingInQueue = ticketNumber - lastExitedTicketNumber;
     if (ticketNumber <= maxPaymentPageUsers) {
       remainingInQueue = 0;
     }
 
     log.debug(
-        "[getPaymentPageAccessStatusByTicket] this queueNumber: {}, lastExitedQueueNumber: {}, remainingInQueue: {}",
-        ticketNumber, lastExitedQueueNumber, remainingInQueue);
+        "[getPaymentPageAccessStatusByTicket] this ticketNumber: {}, lastExitedTicketNumber: {}, remainingInQueue: {}",
+        ticketNumber, lastExitedTicketNumber, remainingInQueue);
 
     if (remainingInQueue <= 0) {
       log.debug("[getPaymentPageAccessStatusByTicket] ACCESS_GRANTED, orderId: {}",
@@ -139,7 +139,7 @@ public class TicketService {
     }
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   // :: 페이지 접근 가능 여부 확인
   public void validateTicketAndPaymentPageAccessible(QueueMessage message)
       throws InterruptedException {

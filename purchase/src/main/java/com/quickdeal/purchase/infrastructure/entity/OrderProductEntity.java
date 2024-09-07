@@ -25,7 +25,7 @@ public class OrderProductEntity {
   private OrderEntity order;
 
   @Column(name = "product_id", nullable = false)
-  private Long productId; // Q - ProductEntity 를 매핑하지 말고 단순히 productId만 저장하고자 함
+  private Long productId;
 
   @Getter
   @Column(nullable = false)
