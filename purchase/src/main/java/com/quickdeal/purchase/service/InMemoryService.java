@@ -24,16 +24,77 @@ public class InMemoryService {
     this.log = LoggerFactory.getLogger(InMemoryService.class);
   }
 
-  public Object executeLuaScript(String script, List<String> keys, List<String> args) {
+  public boolean validatePaymentPageAccess(List<String> keys, List<String> args) {
+    String luaScript = """
+        local productId = KEYS[1]
+        local ticketNumber = tonumber(ARGV[1])
+        local userId = ARGV[2]
+        local maxPaymentPageUsers = tonumber(ARGV[3])
+        
+        -- 키 변수화
+        local paymentPageUserCountKey = "product:" .. productId .. ":paymentPageUser"
+        local lastExitedTicketNumberKey = "product:" .. productId .. ":lastExitedTicketNumber"
+        
+        -- 현재 접속자 수 확인
+        local currentAccessCount = redis.call("SCARD", paymentPageUserCountKey)
+        redis.log(redis.LOG_NOTICE, tostring(currentAccessCount) .. "명 접속중입니다.")
+        
+        -- UUID 가 있는지 검토
+        local isUserPresent = redis.call("SISMEMBER", paymentPageUserCountKey, userId)
+        
+        if currentAccessCount < maxPaymentPageUsers and isUserPresent == 0 then
+            redis.call("SADD", paymentPageUserCountKey, userId)
+        
+            local previousTicketNumber = redis.call("GET", lastExitedTicketNumberKey)
+            local status, err = pcall(function()
+                -- 마지막 처리 대기열 번호 업데이트
+                redis.log(redis.LOG_NOTICE, "업데이트된 티켓 넘버 " .. tostring(ticketNumber))
+                redis.call("SET", lastExitedTicketNumberKey, ticketNumber)
+            end)
+        
+            if not status then
+                redis.log(redis.LOG_WARNING, "pcall 오류 발생: " .. err)
+        
+                local rollbackStatus, rollbackErr = pcall(function()
+                    redis.call("SREM", paymentPageUserCountKey, userId)
+                end)
+                if not rollbackStatus then
+                    redis.log(redis.LOG_WARNING, "접속자 수 롤백 중 오류 발생: " .. rollbackErr)
+                end
+        
+                local queueRollbackStatus, queueRollbackErr = pcall(function()
+                    if previousTicketNumber then
+                        redis.call("SET", lastExitedTicketNumberKey, previousTicketNumber)
+                    else
+                        redis.call("DEL", lastExitedTicketNumberKey)
+                    end
+                end)
+                if not queueRollbackStatus then
+                    redis.log(redis.LOG_WARNING, "대기열 번호 롤백 중 오류 발생: " .. queueRollbackErr)
+                end
+        
+                return redis.error_reply("작업 중 오류가 발생하여 롤백되었습니다.")
+            end
+        
+            return 1
+        else
+            return 0
+        end
+        """;
+
+    Object result = executeLuaScript(luaScript, keys, args);
+    return Integer.parseInt(result.toString()) == 1;
+  }
+
+  private Object executeLuaScript(String script, List<String> keys, List<String> args) {
     return jedis.eval(script, keys, args);
   }
 
-  // 레디스에서 마지막으로 요청 들어온 대기번호 업데이트하는 코드
   public Long getNewTicketNumber(Long productId) {
     return incrementLastTicketNumber(productId);
   }
 
-  public Long incrementLastTicketNumber(Long productId) {
+  private Long incrementLastTicketNumber(Long productId) {
     String key = RedisConfig.getLastTicketNumberKey(productId);
     Object value = longValueRedisTemplate.opsForValue().increment(key, 1);
     return value != null ? Long.parseLong(String.valueOf(value)) : 1L;
@@ -46,22 +107,15 @@ public class InMemoryService {
 
   // 레디스에서 마지막으로 대기열에서 빠져나간 대기번호 가져오는 코드
   public Long getLastExitedTicketNumber(Long productId) {
-    String key = RedisConfig.getLastExitedQueueNumberKey(productId);
+    String key = RedisConfig.getLastExitedTicketNumberKey(productId);
     Object value = longValueRedisTemplate.opsForValue().get(key);
     return value != null ? Long.parseLong(String.valueOf(value)) : 0L;
   }
 
-  //TODO: lua 로 구현할지 고민 중
-//  public void updateLastExitedTicketNumber(Long productId, Long lastExitedQueueNumber) {
-//    String key = RedisConfig.getLastExitedQueueNumberKey(productId);
-//    longValueRedisTemplate.opsForValue().set(key, lastExitedQueueNumber);
-//  }
-
-//  //TODO: lua 로 구현할지 고민 중
-//  public void incrementPaymentPageUserCount(Long productId) {
-//    String key = RedisConfig.getPaymentPageUserKey(productId);
-//    stringValueRedisTemplate.opsForValue().increment(key, 1L);
-//  }
+  public void updateLastExitedTicketNumber(Long productId, Long lastExitedTicketNumber) {
+    String key = RedisConfig.getLastExitedTicketNumberKey(productId);
+    longValueRedisTemplate.opsForValue().set(key, lastExitedTicketNumber);
+  }
 
   public void removePaymentPageUser(Long productId, String userId) {
     String key = RedisConfig.getPaymentPageUserKey(productId);
