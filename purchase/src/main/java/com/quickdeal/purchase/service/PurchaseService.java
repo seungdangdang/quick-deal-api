@@ -1,49 +1,44 @@
 package com.quickdeal.purchase.service;
 
+import com.quickdeal.common.exception.OrderTimeExpiredException;
 import com.quickdeal.purchase.domain.Order;
 import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.OrderStatusType;
 import com.quickdeal.purchase.domain.PaymentStatus;
 import com.quickdeal.purchase.domain.PaymentStatusType;
-import com.quickdeal.purchase.domain.Ticket;
+import com.quickdeal.purchase.outbound.redis.repository.OrderPaymentSlotRedisRepository;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PurchaseService {
 
   private final PaymentService paymentService;
-  private final TicketService ticketService;
   private final OrderService orderService;
-  private final InMemoryService inMemoryService;
+  private final OrderPaymentSlotRedisRepository orderPaymentSlotRedisRepository;
   private final Logger log;
 
-  public PurchaseService(PaymentService paymentService, TicketService ticketService,
-      OrderService orderService, InMemoryService inMemoryService) {
+  public PurchaseService(PaymentService paymentService,
+      OrderService orderService, OrderPaymentSlotRedisRepository orderPaymentSlotRedisRepository) {
     this.paymentService = paymentService;
-    this.ticketService = ticketService;
     this.orderService = orderService;
-    this.inMemoryService = inMemoryService;
+    this.orderPaymentSlotRedisRepository = orderPaymentSlotRedisRepository;
     this.log = LoggerFactory.getLogger(this.getClass());
   }
 
-  // :: 주문을 생성하고, 대기열 토큰을 발급하고, 큐잉을 진행함
-  // TODO: rdb + kafka 간 트랜잭션 적용
-  public Ticket saveOrderAndGetTicket(OrderCreationCommand command) {
-    String userId = command.userId();
-    Long productId = command.quantityPerProduct().productId();
-    Integer quantity = command.quantityPerProduct().quantity();
-
-    Order order = orderService.saveOrderAndPaymentInitialData(userId, productId, quantity);
-    log.debug(
-        "[getTicket] finished saveOrderAndPaymentInitialData, userId: {}, orderId : {}, orderStatus : {}",
-        userId, order.id(), order.status());
-    return ticketService.issueTicket(userId, productId, order.id());
+  public Order saveOrder(OrderCreationCommand command) {
+    // 주문 만료 시간이 지났는지 검증
+    if (isOrderExpired(command)) {
+      throw new OrderTimeExpiredException("주문 가능 시간이 만료되었습니다.");
+    }
+    return orderService.saveOrderAndPaymentInitialData(command);
   }
 
+  @Transactional
   // :: 결제 진행 후 주문, 결제 상태 업데이트
-  // TODO: rdb, 레디스 간 트랜잭션 필요
   public PaymentStatus paymentAndGetPaymentStatus(Long orderId, Long productId,
       Integer paymentAmount,
       String userId) {
@@ -52,37 +47,64 @@ public class PurchaseService {
         orderId);
 
     if (status.isPaymentCompleted()) {
-      PaymentCompletedProcess(orderId, productId, userId);
+      saveDone(orderId, productId, userId);
     } else if (status.isItemSoldOut()) {
-      PaymentCancelProcess(orderId, productId, userId);
+      saveCancel(orderId, productId, userId);
     } else {
-      PaymentFailedProcess(orderId, productId, userId);
+      saveError(orderId, productId, userId);
     }
     return status;
   }
 
-  // TODO: rdb, 레디스 간 트랜잭션 필요
-  private void PaymentFailedProcess(Long orderId, Long productId, String userId) {
+  private boolean isOrderExpired(OrderCreationCommand command) {
+    Long productId = command.quantityPerProduct().productId();
+    String userId = command.userId();
+    Long expirationTime = orderPaymentSlotRedisRepository.getPaymentPageUserSortedSetScore(
+        productId,
+        userId
+    ).orElseThrow(() -> {
+      log.error(
+          "[getUserExpirationTime] redis sorted set score is null."
+          + ", valueForSearch(userId): {}, productId: {}",
+          userId,
+          productId
+      );
+
+      return new IllegalStateException(
+          "[getUserExpirationTime] redis sorted set score is null. key: "
+          + ", valueForSearch(userId): " + userId +
+          ", productId: " + productId
+      );
+    });
+    long currentTimeInSeconds = Instant.now().getEpochSecond();
+
+    boolean isOrderExpired = expirationTime != null && expirationTime < currentTimeInSeconds;
+    log.debug(
+        "[isOrderExpired] userExpirationTime fetched. userExpirationTime: {}, command: {}, isOrderExpired: {}",
+        currentTimeInSeconds, command, isOrderExpired);
+    return isOrderExpired;
+  }
+
+  // :: 결제 실패 - 주문 / 결제 정보 업데이트
+  private void saveError(Long orderId, Long productId, String userId) {
     log.debug("[handlePaymentFailed] payment not completed. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.ERROR,
         PaymentStatusType.ERROR);
-    inMemoryService.removePaymentPageUser(productId, userId);
+    orderPaymentSlotRedisRepository.removePaymentPageUser(productId, userId);
   }
 
-  // TODO: rdb, 레디스 간 트랜잭션 필요
-  private void PaymentCompletedProcess(Long orderId, Long productId, String userId) {
+  // :: 결제 완료 - 주문 / 결제 정보 업데이트
+  private void saveDone(Long orderId, Long productId, String userId) {
     log.debug("[handlePaymentCompleteStatus] payment completed. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.DONE, PaymentStatusType.DONE);
-    inMemoryService.removePaymentPageUser(productId, userId);
+    orderPaymentSlotRedisRepository.removePaymentPageUser(productId, userId);
   }
 
-  // :: 결제 취소 - 주문 / 결제 정보업데이트
-  // TODO: rdb, 레디스 간 트랜잭션 필요
-  public void PaymentCancelProcess(Long orderId, Long productId, String userId) {
+  // :: 결제 취소 - 주문 / 결제 정보 업데이트
+  public void saveCancel(Long orderId, Long productId, String userId) {
     log.debug("[handleCancelPayment] cancel. userID: {}", userId);
     orderService.updateOrderAndPaymentStatus(orderId, OrderStatusType.CANCEL,
         PaymentStatusType.CANCEL);
-    inMemoryService.removePaymentPageUser(productId,
-        userId); //TODO: 컨슘 전(대기 창)에 취소를 하면 해당 로직이 무효가 됨
+    orderPaymentSlotRedisRepository.removePaymentPageUser(productId, userId);
   }
 }
