@@ -4,19 +4,21 @@ services:
     container_name: db
     environment:
       MYSQL_ROOT_PASSWORD: root
-    command: mysqld --general-log=1 --general-log-file=/var/log/mysql/general-log.log
+    command: mysqld --general-log=1 --general-log-file=/var/log/mysql/general-log.log --innodb_print_all_deadlocks=1 --log_error=/var/lib/mysql/error.log
     ports:
       - "3306:3306"
-    volumes:
-      - quick_deal:/var/lib/mysql
+#    volumes:
+#      - quick_deal:/var/lib/mysql
+#      - type: bind
+#        source: ./docker/mysql
+#        target: /docker-entrypoint-initdb.d
+#        read_only: true
 
   redis:
     image: redis:7.4.0
     container_name: redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
 
   kafka:
     container_name: kafka
@@ -37,6 +39,8 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       CLUSTER_ID: 80EA1541-4E7E-49C0-B9AA-AD45FB2E6091
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
@@ -54,6 +58,4 @@ services:
       - kafka
 
 volumes:
-  quick_deal:
-  redis_data:
   kafka_data:
