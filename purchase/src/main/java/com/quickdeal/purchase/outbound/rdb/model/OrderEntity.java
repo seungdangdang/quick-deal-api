@@ -1,4 +1,4 @@
-package com.quickdeal.purchase.infrastructure.entity;
+package com.quickdeal.purchase.outbound.rdb.model;
 
 import com.quickdeal.purchase.domain.Order;
 import com.quickdeal.purchase.domain.OrderStatusType;

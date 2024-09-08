@@ -1,6 +1,6 @@
-package com.quickdeal.purchase.api.controller;
+package com.quickdeal.purchase.inbound.api.controller;
 
-import com.quickdeal.purchase.api.resource.PaymentStatusResource;
+import com.quickdeal.purchase.inbound.api.resource.PaymentStatusResource;
 import com.quickdeal.purchase.domain.PaymentStatus;
 import com.quickdeal.purchase.service.PurchaseService;
 import org.slf4j.Logger;
@@ -25,9 +25,10 @@ public class PaymentController {
   @PostMapping("/products/{productId}/payment")
   public PaymentStatusResource payment(@PathVariable Long productId,
       @RequestBody PaymentRequestBody requestBody) {
+    log.debug("[payment] received request. productId: {}, requestBody: {}", productId, requestBody);
     PaymentStatus result = purchaseHandlerService.paymentAndGetPaymentStatus(requestBody.orderId(), productId,
         requestBody.paymentAmount(), requestBody.userId());
-    log.debug("<controller> [payment] finished payment, resultStatus: {}, orderId: {}",
+    log.debug("[payment] finished payment. resultStatus: {}, orderId: {}",
         result.status(), result.orderId());
     return PaymentStatusResource.from(result);
   }

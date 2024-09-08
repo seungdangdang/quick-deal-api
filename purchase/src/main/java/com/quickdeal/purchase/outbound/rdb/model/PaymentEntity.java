@@ -1,4 +1,4 @@
-package com.quickdeal.purchase.infrastructure.entity;
+package com.quickdeal.purchase.outbound.rdb.model;
 
 import com.quickdeal.purchase.domain.PaymentStatusType;
 import jakarta.persistence.Column;

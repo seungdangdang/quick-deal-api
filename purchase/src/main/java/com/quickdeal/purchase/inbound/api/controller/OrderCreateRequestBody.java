@@ -1,4 +1,4 @@
-package com.quickdeal.purchase.api.controller;
+package com.quickdeal.purchase.inbound.api.controller;
 
 import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.QuantityPerProduct;

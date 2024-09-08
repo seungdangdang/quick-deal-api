@@ -4,16 +4,17 @@ import com.quickdeal.common.exception.OrderStatusInvalidException;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.common.service.domain.Product;
 import com.quickdeal.purchase.domain.Order;
+import com.quickdeal.purchase.domain.OrderCreationCommand;
 import com.quickdeal.purchase.domain.OrderInfo;
 import com.quickdeal.purchase.domain.OrderProduct;
 import com.quickdeal.purchase.domain.OrderProductInfo;
 import com.quickdeal.purchase.domain.OrderStatusType;
 import com.quickdeal.purchase.domain.PaymentStatusType;
-import com.quickdeal.purchase.infrastructure.entity.OrderEntity;
-import com.quickdeal.purchase.infrastructure.entity.OrderProductEntity;
-import com.quickdeal.purchase.infrastructure.entity.PaymentEntity;
-import com.quickdeal.purchase.infrastructure.repository.OrderProductRepository;
-import com.quickdeal.purchase.infrastructure.repository.OrderRepository;
+import com.quickdeal.purchase.outbound.rdb.model.OrderEntity;
+import com.quickdeal.purchase.outbound.rdb.model.OrderProductEntity;
+import com.quickdeal.purchase.outbound.rdb.model.PaymentEntity;
+import com.quickdeal.purchase.outbound.rdb.repository.OrderProductRepository;
+import com.quickdeal.purchase.outbound.rdb.repository.OrderRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import org.slf4j.Logger;
@@ -41,7 +42,10 @@ public class OrderService {
 
   // :: 주문과 결제 초기 데이터 저장
   @Transactional
-  public Order saveOrderAndPaymentInitialData(String userId, Long productId, Integer quantity) {
+  public Order saveOrderAndPaymentInitialData(OrderCreationCommand command) {
+    String userId = command.userId();
+    Long productId = command.quantityPerProduct().productId();
+    Integer quantity = command.quantityPerProduct().quantity();
     int price = productService.getPriceById(productId);
     int totalAmount = price * quantity;
 
@@ -80,6 +84,7 @@ public class OrderService {
   @Transactional
   public void updateOrderAndPaymentStatus(Long orderId, OrderStatusType orderStatus,
       PaymentStatusType paymentStatus) {
+    // TODO: order entity 조회 -> entity 수정 -> entity save (repo.save(entity))(
     // 주문 상태 업데이트
     orderRepository.updateOrderStatus(orderId, orderStatus);
 

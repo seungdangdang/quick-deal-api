@@ -1,6 +1,6 @@
-package com.quickdeal.purchase.infrastructure.repository;
+package com.quickdeal.purchase.outbound.rdb.repository;
 
-import com.quickdeal.purchase.infrastructure.entity.OrderProductEntity;
+import com.quickdeal.purchase.outbound.rdb.model.OrderProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

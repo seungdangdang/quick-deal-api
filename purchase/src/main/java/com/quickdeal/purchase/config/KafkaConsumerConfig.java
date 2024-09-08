@@ -37,13 +37,14 @@ public class KafkaConsumerConfig {
     ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory());
     factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+    factory.setConcurrency(10); // FIXME: 파티션 수에 맞추기
     return factory;
   }
 
   @Bean
   public List<String> topicList() {
-    return IntStream.rangeClosed(1, 40)
-        .mapToObj(i -> "queue-" + i)
+    return IntStream.rangeClosed(1, 20)
+        .mapToObj(i -> "quick-deal.order.creation.request-" + i)
         .collect(Collectors.toList());
   }
 }

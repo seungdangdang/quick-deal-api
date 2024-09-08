@@ -1,6 +1,6 @@
-package com.quickdeal.purchase.infrastructure.repository;
+package com.quickdeal.purchase.outbound.rdb.repository;
 
-import com.quickdeal.purchase.infrastructure.entity.OrderEntity;
+import com.quickdeal.purchase.outbound.rdb.model.OrderEntity;
 import com.quickdeal.purchase.domain.OrderStatusType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

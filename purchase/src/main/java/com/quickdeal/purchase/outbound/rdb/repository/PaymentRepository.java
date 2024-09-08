@@ -1,6 +1,6 @@
-package com.quickdeal.purchase.infrastructure.repository;
+package com.quickdeal.purchase.outbound.rdb.repository;
 
-import com.quickdeal.purchase.infrastructure.entity.PaymentEntity;
+import com.quickdeal.purchase.outbound.rdb.model.PaymentEntity;
 import com.quickdeal.purchase.domain.PaymentStatusType;
 import java.time.Instant;
 import org.springframework.data.jpa.repository.JpaRepository;

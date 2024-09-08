@@ -1,4 +1,4 @@
-package com.quickdeal.purchase.api.resource;
+package com.quickdeal.purchase.inbound.api.resource;
 
 import com.quickdeal.purchase.domain.PaymentStatus;
 
