@@ -16,7 +16,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-        format_sql: true
+        format_sql: false
     show-sql: false
   flyway:
     enabled: true
@@ -36,26 +36,52 @@ kafka:
 
 logging:
   level:
-    com.quickdeal: DEBUG
-  config: classpath:logback.xml
+    root: ERROR
+#    com.quickdeal.common.filter.LoggingFilter: DEBUG
+#    redis.clients.jedis.exceptions.JedisDataException: ERROR
+#    com.quickdeal.purchase.service.OrderTicketService: DEBUG
+#    com.quickdeal.purchase.inbound.api.controller.OrderTicketController: DEBUG
+#    com.quickdeal: DEBUG
+#    com.quickdeal.purchase.service.KafkaQueueConsumer: DEBUG
+#    org.springframework.kafka: DEBUG
+#    org.apache.kafka: DEBUG
+#  config: classpath:logback.xml.bak
+  file:
+    name: logs/myapp.log # 로그 파일의 이름과 경로 지정
+#  pattern:
+#    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n" # 콘솔 로그 패턴
+#    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" # 파일 로그 패턴
 
 # 비즈니스 설정 값
-jwt:
+order-creation:
+  retry-delay: 1000
+  retry-limit: 500
+  max-concurrent-users: 500
+  timeout-seconds: 1200s
+  page-timeout-seconds: 600s
   secret-key: ${SECRET_KEY}
+  expiration: 2h
+  renewal-threshold: 30m
+  extension-duration: 1h
+  kafka-topics-order-creation-request:
+    - quick-deal.order.creation.request-1
+    - quick-deal.order.creation.request-2
+    - quick-deal.order.creation.request-3
+    - quick-deal.order.creation.request-4
+    - quick-deal.order.creation.request-5
+    - quick-deal.order.creation.request-6
+    - quick-deal.order.creation.request-7
+    - quick-deal.order.creation.request-8
+    - quick-deal.order.creation.request-9
+    - quick-deal.order.creation.request-10
+    - quick-deal.order.creation.request-11
+    - quick-deal.order.creation.request-12
+    - quick-deal.order.creation.request-13
+    - quick-deal.order.creation.request-14
+    - quick-deal.order.creation.request-15
+    - quick-deal.order.creation.request-16
+    - quick-deal.order.creation.request-17
+    - quick-deal.order.creation.request-18
+    - quick-deal.order.creation.request-19
+    - quick-deal.order.creation.request-20
 
-ticket-token:
-    expiration: 2h
-    renewal-threshold: 30m
-    extension-duration: 1h
-
-retry:
-  delay: 1000 # 결제 페이지 접속 여부 확인 시 thread.sleep
-  limit: 500 # 결제 페이지 접속 여부 반복 제한
-
-queue:
-  topic-header: "queue-"
-
-payment:
-  page:
-    max-users: 100
-    timeout-seconds: 600

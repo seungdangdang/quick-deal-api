@@ -4,7 +4,6 @@ class Versions {
         const val KAFKA = "3.7.0"
         const val SPRING_KAFKA = "3.2.0"
         const val JJWT_API = "0.11.5"
-        const val JEDIS = "5.1.0"
     }
 }
 
@@ -20,9 +19,9 @@ repositories {
 }
 
 dependencies {
-    implementation("redis.clients:jedis:${Versions.JEDIS}")
     implementation("io.jsonwebtoken:jjwt-api:${Versions.JJWT_API}")
     implementation("org.springframework.boot:spring-boot-starter-data-redis:${Versions.REDIS}")
+    implementation("io.lettuce:lettuce-core:6.4.0.RELEASE")
     implementation("org.springframework.kafka:spring-kafka:${Versions.SPRING_KAFKA}")
     implementation("org.apache.kafka:kafka-clients:${Versions.KAFKA}")
     implementation(project(":common"))
