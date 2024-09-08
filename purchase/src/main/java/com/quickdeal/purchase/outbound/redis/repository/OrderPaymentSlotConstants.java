@@ -72,23 +72,4 @@ class OrderPaymentSlotConstants {
 
   public static final RedisScript<Long> EXISTS_PAYMENT_SLOT_LUA_SCRIPT =
       RedisScript.of(EXISTS_PAYMENT_SLOT_LUA_SCRIPT_STRING, Long.class);
-
-  private static final String GET_USER_EXPIRATION_TIME_LUA_SCRIPT_STRING = """
-      local key = KEYS[1]
-      local userId = ARGV[1]
-      local isUserPresent = redis.call('ZSCORE', key, userId)
-      
-      if isUserPresent then
-          -- ZSCORE 명령어가 사용자 ID를 찾았을 때
-          redis.log(redis.LOG_WARNING, string.format("[INFO] User found in sorted set. User ID: %s, Key: %s, Score: %s", userId, key, tostring(isUserPresent)))
-          return tonumber(isUserPresent)
-      else
-          -- ZSCORE 명령어가 사용자 ID를 찾지 못했을 때
-          redis.log(redis.LOG_WARNING, string.format("[INFO] User not found in sorted set. User ID: %s, Key: %s, Result: nil", userId, key))
-          return nil
-      end
-      """;
-
-  public static final RedisScript<Long> GET_USER_EXPIRATION_TIME_LUA_SCRIPT =
-      RedisScript.of(GET_USER_EXPIRATION_TIME_LUA_SCRIPT_STRING, Long.class);
 }
