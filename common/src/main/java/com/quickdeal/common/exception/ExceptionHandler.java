@@ -76,4 +76,19 @@ public class ExceptionHandler {
 
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
   }
+
+  @org.springframework.web.bind.annotation.ExceptionHandler(OrderTimeExpiredException.class)
+  public ResponseEntity<ErrorResponseBody> handleOrderTimeExpiredException(
+      OrderTimeExpiredException exception, HttpServletRequest request) {
+    log.warn("[handleOrderTimeExpiredException] exception: {}", exception.getMessage());
+    ErrorResponseBody body = new ErrorResponseBody(
+        Instant.now(),
+        HttpStatus.SERVICE_UNAVAILABLE.value(),
+        HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase(),
+        exception.getMessage(),
+        request.getRequestURI()
+    );
+
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+  }
 }
