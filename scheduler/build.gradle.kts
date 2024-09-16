@@ -1,7 +1,3 @@
-plugins {
-    id("java")
-}
-
 group = "com.quickdeal"
 version = "0.0.1-SNAPSHOT"
 
@@ -18,4 +14,12 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jar {
+    enabled = true
+}
+
+tasks.bootJar {
+    enabled = false
 }

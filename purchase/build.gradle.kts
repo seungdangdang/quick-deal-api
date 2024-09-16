@@ -7,10 +7,6 @@ class Versions {
     }
 }
 
-plugins {
-    id("java")
-}
-
 group = "com.quickdeal"
 version = "0.0.1-SNAPSHOT"
 

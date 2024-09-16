@@ -2,6 +2,7 @@ class Versions {
     companion object {
         const val SPRING_BOOT = "3.3.2"
         const val LOMBOK = "1.18.28"
+        val JDK = JavaVersion.VERSION_17.toString()
     }
 }
 
@@ -45,4 +46,23 @@ subprojects {
         testImplementation("org.junit.jupiter:junit-jupiter-api")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     }
+
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        sourceCompatibility = Versions.JDK
+        targetCompatibility = Versions.JDK
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+}
+
+tasks.bootJar {
+    enabled = false
+    mainClass.set("com.quickdeal.core.CoreApplication")
+}
+
+tasks.jar {
+    enabled = true
 }

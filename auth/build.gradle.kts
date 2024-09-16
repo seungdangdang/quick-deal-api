@@ -14,6 +14,14 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
+tasks.jar {
+    enabled = true
+}
+
+tasks.bootJar {
+    enabled = false
+}
+
 tasks.test {
     useJUnitPlatform()
 }
