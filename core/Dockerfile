@@ -11,7 +11,7 @@ COPY /build/libs/core-0.0.1-SNAPSHOT.jar app.jar
 
 # 환경변수 세팅
 ENV SECRET_KEY="localmysecretkeylocalmysecretkeylocalmysecretkeylocalmysecretkeylocalmysecretkey"
-
+ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
 
 # 컨테이너의 포트 8082를 노출하겠음
 EXPOSE 8082
