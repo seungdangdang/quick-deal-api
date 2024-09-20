@@ -12,6 +12,8 @@ services:
               --log_error=/var/lib/mysql/error.log
     ports:
       - "3306:3306"
+    networks:
+      - quick-deal-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -23,6 +25,8 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - quick-deal-network
     command: [ "redis-server", "--bind", "0.0.0.0" ]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -36,13 +40,16 @@ services:
     ports:
       - "9092:9092"
       - "29092:29092"
+    networks:
+      - quick-deal-network
     volumes:
       - kafka_data:/data
     environment:
       KAFKA_CFG_BROKER_ID: 1
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://192.168.219.1:9092 # 애플리케이션 - 컨테이너
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://kafka:9092 # 애플리케이션 - 컨테이너
+#      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092 # 애플리케이션 - jar, intellj
       KAFKA_LISTENERS: INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://:9092
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
@@ -58,6 +65,8 @@ services:
     container_name: kafka-ui
     ports:
       - '8081:8080'
+    networks:
+      - quick-deal-network
     environment:
       KAFKA_CLUSTERS_0_NAME: Local-Kraft-Cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
@@ -66,27 +75,9 @@ services:
       KAFKA_CLUSTERS_0_AUDIT_CONSOLEAUDITENABLED: true
     depends_on:
       - kafka
-
-#  quick-deal-api:
-#    image: quick-deal-api:2409162007
-#    container_name: quick-deal-api
-#    ports:
-#      - "8082:8082"
-#    environment:
-#      SPRING_PROFILES_ACTIVE: docker  # Docker 프로파일 활성화, TODO: 나중에는 명령줄에서 설정할 것
-#      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/quick_deal
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
-#      SPRING_REDIS_HOST: redis
-#      SPRING_REDIS_PORT: 6379
-#      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-#      SECRET_KEY: "localmysecretkeylocalmysecretkeylocalmysecretkeylocalmysecretkeylocalmysecretkey"
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#      kafka:
-#        condition: service_started
 volumes:
   kafka_data:
+
+networks:
+  quick-deal-network:
+    external: true
