@@ -40,6 +40,36 @@ spring:
 kafka:
   bootstrap-servers: localhost:9092
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, metrics, health
+  metrics:
+    enable:
+      all: true
+    kafka:
+      enabled: true
+    redis:
+      enabled: true
+    jdbc:
+      enabled: true
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    redis:
+      enabled: true
+    kafka:
+      enabled: true
+    db:
+      enabled: true
+  prometheus:
+    metrics-export:
+      step: 5s
+
 logging:
   level:
     ## redis

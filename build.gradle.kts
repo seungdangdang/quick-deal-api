@@ -39,6 +39,7 @@ subprojects {
         implementation("org.springframework.boot:spring-boot-starter-data-jpa:${Versions.SPRING_BOOT}")
         implementation("org.projectlombok:lombok:${Versions.LOMBOK}")
         implementation("org.springframework.boot:spring-boot-starter-actuator:3.3.4")
+        implementation("io.micrometer:micrometer-registry-prometheus")
         implementation("org.apache.commons:commons-lang3:3.17.0")
         annotationProcessor("org.projectlombok:lombok:${Versions.LOMBOK}")
         annotationProcessor("jakarta.annotation:jakarta.annotation-api")
