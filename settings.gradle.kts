@@ -1,7 +1,8 @@
-rootProject.name = "quick-deal"
+rootProject.name = "quick-deal-api"
 include("core")
 include("common")
-include("order")
+include("purchase")
 include("product")
 include("user")
-include("payment")
+include("scheduler")
+include("auth")

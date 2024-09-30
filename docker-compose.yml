@@ -1,16 +1,59 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:8.4.2
-    container_name: quick-deal
+    container_name: db
     environment:
       MYSQL_ROOT_PASSWORD: root
     command: mysqld --general-log=1 --general-log-file=/var/log/mysql/general-log.log
-    volumes:
-      - quick_deal:/var/lib/mysql
     ports:
       - "3306:3306"
+    volumes:
+      - quick_deal:/var/lib/mysql
+
+  redis:
+    image: redis:7.4.0
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  kafka:
+    container_name: kafka
+    image: apache/kafka:3.8.0
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - kafka_data:/data
+    environment:
+      KAFKA_CFG_BROKER_ID: 1
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENERS: INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://:9092
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      CLUSTER_ID: 80EA1541-4E7E-49C0-B9AA-AD45FB2E6091
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    restart: unless-stopped
+    container_name: kafka-ui
+    ports:
+      - '8081:8080'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: Local-Kraft-Cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      DYNAMIC_CONFIG_ENABLED: true
+      KAFKA_CLUSTERS_0_AUDIT_TOPICAUDITENABLED: true
+      KAFKA_CLUSTERS_0_AUDIT_CONSOLEAUDITENABLED: true
+    depends_on:
+      - kafka
 
 volumes:
   quick_deal:
+  redis_data:
+  kafka_data:

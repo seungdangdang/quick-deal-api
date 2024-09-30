@@ -1,6 +1,7 @@
 package com.quickdeal.product.infrastructure.entity;
 
-import com.quickdeal.product.service.domain.Product;
+import com.quickdeal.common.service.domain.CategoryType;
+import com.quickdeal.common.service.domain.Product;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,13 +12,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity(name = "Product")
-@Table(name = "product")
+@Table(name = "`product`")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductEntity {
 
   @Id

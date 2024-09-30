@@ -16,15 +16,14 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":order"))
+    implementation(project(":purchase"))
     implementation(project(":product"))
-    implementation(project(":payment"))
     implementation(project(":user"))
+    implementation(project(":auth"))
+    implementation(project(":scheduler"))
     implementation("org.flywaydb:flyway-core:${Versions.FLYWAY}")
     implementation("org.flywaydb:flyway-mysql")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 tasks.test {

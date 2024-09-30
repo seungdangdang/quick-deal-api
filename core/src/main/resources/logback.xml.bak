@@ -1,0 +1,38 @@
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<!--<configuration>-->
+<!--  &lt;!&ndash; Console Appender &ndash;&gt;-->
+<!--  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">-->
+<!--    <encoder>-->
+<!--      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+<!--    </encoder>-->
+<!--  </appender>-->
+
+<!--&lt;!&ndash;  &lt;!&ndash; File Appender for System Logs &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;  <appender name="SYSTEM_LOG_FILE" class="ch.qos.logback.core.FileAppender">&ndash;&gt;-->
+<!--&lt;!&ndash;    <file>logs/system.log</file>&ndash;&gt;-->
+<!--&lt;!&ndash;    <encoder>&ndash;&gt;-->
+<!--&lt;!&ndash;      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>&ndash;&gt;-->
+<!--&lt;!&ndash;    </encoder>&ndash;&gt;-->
+<!--&lt;!&ndash;  </appender>&ndash;&gt;-->
+
+<!--&lt;!&ndash;  &lt;!&ndash; File Appender for com.quickdeal Logs &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;  <appender name="QUICKDEAL_LOG_FILE" class="ch.qos.logback.core.FileAppender">&ndash;&gt;-->
+<!--&lt;!&ndash;    <file>logs/quickdeal.log</file>&ndash;&gt;-->
+<!--&lt;!&ndash;    <encoder>&ndash;&gt;-->
+<!--&lt;!&ndash;      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>&ndash;&gt;-->
+<!--&lt;!&ndash;    </encoder>&ndash;&gt;-->
+<!--&lt;!&ndash;  </appender>&ndash;&gt;-->
+
+<!--  &lt;!&ndash; Root Logger: Outputs all logs to console and system log file &ndash;&gt;-->
+<!--  <root level="INFO">-->
+<!--    <appender-ref ref="CONSOLE" />-->
+<!--&lt;!&ndash;    <appender-ref ref="SYSTEM_LOG_FILE" />&ndash;&gt;-->
+<!--  </root>-->
+
+<!--  &lt;!&ndash; Logger for com.quickdeal package: Logs at DEBUG level and outputs to quickdeal log file &ndash;&gt;-->
+<!--  <logger name="com.quickdeal" level="DEBUG" additivity="false">-->
+<!--    <appender-ref ref="CONSOLE" />-->
+<!--    <appender-ref ref="QUICKDEAL_LOG_FILE" />-->
+<!--  </logger>-->
+
+<!--</configuration>-->

@@ -1,0 +1,87 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/quick_deal
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    generate-ddl: false
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        format_sql: false
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    sql-migration-suffixes: sql,ddl
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 10000ms
+
+kafka:
+  bootstrap-servers: localhost:9092
+
+logging:
+  level:
+    root: ERROR
+#    com.quickdeal.common.filter.LoggingFilter: DEBUG
+#    redis.clients.jedis.exceptions.JedisDataException: ERROR
+#    com.quickdeal.purchase.service.OrderTicketService: DEBUG
+#    com.quickdeal.purchase.inbound.api.controller.OrderTicketController: DEBUG
+#    com.quickdeal: DEBUG
+#    com.quickdeal.purchase.service.KafkaQueueConsumer: DEBUG
+#    org.springframework.kafka: DEBUG
+#    org.apache.kafka: DEBUG
+#  config: classpath:logback.xml.bak
+  file:
+    name: logs/myapp.log # 로그 파일의 이름과 경로 지정
+#  pattern:
+#    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n" # 콘솔 로그 패턴
+#    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" # 파일 로그 패턴
+
+# 비즈니스 설정 값
+order-creation:
+  retry-delay: 1000
+  retry-limit: 500
+  max-concurrent-users: 500
+  timeout-seconds: 1200s
+  page-timeout-seconds: 600s
+  secret-key: ${SECRET_KEY}
+  expiration: 2h
+  renewal-threshold: 30m
+  extension-duration: 1h
+  kafka-topics-order-creation-request:
+    - quick-deal.order.creation.request-1
+    - quick-deal.order.creation.request-2
+    - quick-deal.order.creation.request-3
+    - quick-deal.order.creation.request-4
+    - quick-deal.order.creation.request-5
+    - quick-deal.order.creation.request-6
+    - quick-deal.order.creation.request-7
+    - quick-deal.order.creation.request-8
+    - quick-deal.order.creation.request-9
+    - quick-deal.order.creation.request-10
+    - quick-deal.order.creation.request-11
+    - quick-deal.order.creation.request-12
+    - quick-deal.order.creation.request-13
+    - quick-deal.order.creation.request-14
+    - quick-deal.order.creation.request-15
+    - quick-deal.order.creation.request-16
+    - quick-deal.order.creation.request-17
+    - quick-deal.order.creation.request-18
+    - quick-deal.order.creation.request-19
+    - quick-deal.order.creation.request-20
+

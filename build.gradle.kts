@@ -26,8 +26,6 @@ subprojects {
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
 
-    java.sourceCompatibility = JavaVersion.VERSION_17
-
     group = "com.boot"
     version = "0.0.1-SNAPSHOT"
 
