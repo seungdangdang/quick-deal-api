@@ -1,9 +1,9 @@
-package com.quickdeal.product.api.controller;
+package com.quickdeal.product.inbound.api.controller;
 
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.common.service.domain.Product;
-import com.quickdeal.product.api.resource.ProductResource;
-import com.quickdeal.product.api.resource.ProductResourceList;
+import com.quickdeal.product.inbound.api.resource.ProductResource;
+import com.quickdeal.product.inbound.api.resource.ProductResourceList;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

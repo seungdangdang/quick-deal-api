@@ -4,10 +4,9 @@ import com.quickdeal.common.service.ProductService;
 import com.quickdeal.purchase.domain.PaymentStatus;
 import com.quickdeal.purchase.domain.PaymentStatusType;
 import com.quickdeal.purchase.domain.PaymentStatuses;
-import com.quickdeal.purchase.infrastructure.entity.PaymentEntity;
-import com.quickdeal.purchase.infrastructure.repository.PaymentRepository;
+import com.quickdeal.purchase.outbound.rdb.model.PaymentEntity;
+import com.quickdeal.purchase.outbound.rdb.repository.PaymentRepository;
 import java.time.Instant;
-import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

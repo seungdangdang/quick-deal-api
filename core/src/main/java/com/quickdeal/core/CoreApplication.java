@@ -19,12 +19,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
     "com.quickdeal.scheduler"
 })
 @EnableJpaRepositories(basePackages = {
-    "com.quickdeal.product.infrastructure.repository",
+    "com.quickdeal.product.outbound.rdb.repository",
     "com.quickdeal.purchase.outbound.rdb.repository",
     "com.quickdeal.purchase.outbound.redis.repository",
 })
 @EntityScan(basePackages = {
-    "com.quickdeal.product.infrastructure.entity",
+    "com.quickdeal.product.outbound.rdb.model",
     "com.quickdeal.purchase.outbound.rdb.model"
 })
 public class CoreApplication {

@@ -1,4 +1,4 @@
-package com.quickdeal.product.api.controller;
+package com.quickdeal.product.inbound.api.controller;
 
 import java.util.Objects;
 

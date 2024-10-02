@@ -1,4 +1,4 @@
-package com.quickdeal.product.infrastructure.entity;
+package com.quickdeal.product.outbound.rdb.model;
 
 import com.quickdeal.common.service.domain.CategoryType;
 import com.quickdeal.common.service.domain.Product;

@@ -1,6 +1,6 @@
-package com.quickdeal.auth.api.controller;
+package com.quickdeal.auth.inbound.api.controller;
 
-import com.quickdeal.auth.api.resource.LoginResource;
+import com.quickdeal.auth.inbound.api.resource.LoginResource;
 import com.quickdeal.auth.service.LoginService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
