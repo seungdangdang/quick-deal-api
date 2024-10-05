@@ -4,4 +4,5 @@ public record CreateTicketRequestBody(
     String userId,
     Long productId
 ) {
+
 }
