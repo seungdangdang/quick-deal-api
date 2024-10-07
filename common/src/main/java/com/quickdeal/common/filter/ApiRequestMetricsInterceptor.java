@@ -31,23 +31,11 @@ public class ApiRequestMetricsInterceptor implements HandlerInterceptor {
       String path = request.getRequestURI();
       String method = request.getMethod();
       String status = Integer.toString(response.getStatus());
-      String outcome;
-      if (status.startsWith("2")) {
-        outcome = "SUCCESS";
-      } else if (status.startsWith("4")) {
-        outcome = "CLIENT_ERROR";
-      } else if (status.startsWith("5")) {
-        outcome = "SERVER_ERROR";
-      } else {
-        outcome = "OTHER";
-      }
 
       Counter counter = meterRegistry.counter(
           "api_requests_total",
-          "path", path,
-          "method", method,
-          "status", status,
-          "outcome", outcome
+          "callee", "[" + method + "] " + path,
+          "status", status
       );
       counter.increment();
     } catch (Exception e) {
