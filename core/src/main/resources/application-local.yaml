@@ -12,7 +12,9 @@ spring:
     username: root
     password: root
     hikari:
-      maximum-pool-size: 200
+      minimum-idle: 30
+      maximum-pool-size: 100
+      idle-timeout: 300000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -73,28 +75,29 @@ management:
 logging:
   level:
     ## redis
-#    io.lettuce.core: DEBUG
-#    io.lettuce.core.resource: TRACE
-#    io.lettuce.core.pool: TRACE
-#    org.springframework.data.redis: TRACE
+    #    io.lettuce.core: DEBUG
+    #    io.lettuce.core.resource: TRACE
+    #    io.lettuce.core.pool: TRACE
+    #    org.springframework.data.redis: TRACE
     com.quickdeal.purchase.config.com.quickdeal.scheduler.job.RedisStatusScheduler: INFO
+    com.quickdeal.common.filter.com.quickdeal.common.filter.ApiRequestMetricsInterceptor: DEBUG
 
     ## kafka
     org.apache.kafka: ERROR # 카프카 노이지 할 때 이걸 켜자
     org.springframework.kafka: ERROR # 카프카 노이지 할 때 이걸 켜자
-#    com.quickdeal.common.filter.LoggingFilter: DEBUG
-#    redis.clients.jedis.exceptions.JedisDataException: ERROR
-#    com.quickdeal.purchase.service.OrderTicketService: DEBUG
-#    com.quickdeal.purchase.inbound.api.controller.OrderTicketController: DEBUG
-#    com.quickdeal: DEBUG
-#    com.quickdeal.auth.api.controller: INFO
-#    com.quickdeal.product.api.controller: INFO
-#    com.quickdeal.purchase.inbound.api.controller: INFO
-#    com.quickdeal: ERROR
-#    com.quickdeal.purchase.service.KafkaQueueConsumer: DEBUG
-#    org.springframework.kafka: DEBUG
-#    org.apache.kafka: DEBUG
-#  config: classpath:logback.xml.bak
+  #    com.quickdeal.common.filter.LoggingFilter: DEBUG
+  #    redis.clients.jedis.exceptions.JedisDataException: ERROR
+  #    com.quickdeal.purchase.service.OrderTicketService: DEBUG
+  #    com.quickdeal.purchase.inbound.api.controller.OrderTicketController: DEBUG
+  #    com.quickdeal: DEBUG
+  #    com.quickdeal.auth.api.controller: INFO
+  #    com.quickdeal.product.api.controller: INFO
+  #    com.quickdeal.purchase.inbound.api.controller: INFO
+  #    com.quickdeal: ERROR
+  #    com.quickdeal.purchase.service.KafkaQueueConsumer: DEBUG
+  #    org.springframework.kafka: DEBUG
+  #    org.apache.kafka: DEBUG
+  #  config: classpath:logback.xml.bak
   file:
     name: logs/myapp.log # 로그 파일의 이름과 경로 지정
   pattern:
