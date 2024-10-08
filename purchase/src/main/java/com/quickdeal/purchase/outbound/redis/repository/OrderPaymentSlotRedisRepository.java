@@ -1,14 +1,17 @@
 package com.quickdeal.purchase.outbound.redis.repository;
 
-import static com.quickdeal.purchase.outbound.redis.repository.OrderPaymentSlotConstants.EXISTS_PAYMENT_SLOT_LUA_SCRIPT;
+import static com.quickdeal.purchase.outbound.redis.repository.OrderPaymentSlotConstants.UPDATE_LAST_PROCESSED_TICKET_AND_ADD_PAYMENT_USERS;
 import static com.quickdeal.purchase.outbound.redis.repository.RedisKeyUtils.getLastExitedTicketNumberKey;
 import static com.quickdeal.purchase.outbound.redis.repository.RedisKeyUtils.getPaymentPageUserKey;
 
+import com.quickdeal.purchase.domain.PaymentPageUser;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,29 +34,41 @@ public class OrderPaymentSlotRedisRepository {
     this.sortedSetValueRedisTemplate = sortedSetValueRedisTemplate;
   }
 
-  public boolean existsPaymentSlot(
-      long productId,
-      long ticketNumber,
-      String userId,
-      int maxConcurrentPaymentUsers
-  ) {
+  public boolean updateLastProcessedAndAddPaymentPageUsers(List<PaymentPageUser> requests,
+      long productId) {
+    String paymentPageAccessUserKey = getPaymentPageUserKey(productId);
+    String lastExitedTicketNumberKey = getLastExitedTicketNumberKey(productId);
+
     long currentTimeInSeconds = Instant.now().getEpochSecond();
     long expiredAtEpochSeconds = currentTimeInSeconds + timeoutInSeconds.getSeconds();
 
+    List<String> userArgs = requests.stream()
+        .flatMap(paymentPageUser -> Stream.of(paymentPageUser.userId(),
+            String.valueOf(paymentPageUser.ticketNumber())))
+        .toList();
+
+    List<String> combinedArgsList = new ArrayList<>();
+    combinedArgsList.add(String.valueOf(expiredAtEpochSeconds)); // 만료 시간 추가
+    combinedArgsList.addAll(userArgs); // 사용자 데이터 추가
+
+    Object[] args = combinedArgsList.toArray(new Object[0]);
+
     Optional<Long> result = Optional.ofNullable(
         sortedSetValueRedisTemplate.execute(
-            EXISTS_PAYMENT_SLOT_LUA_SCRIPT,
-            List.of(productId + ""),
-            ticketNumber + "",
-            userId,
-            maxConcurrentPaymentUsers + "",
-            expiredAtEpochSeconds + ""
+            UPDATE_LAST_PROCESSED_TICKET_AND_ADD_PAYMENT_USERS,
+            List.of(paymentPageAccessUserKey, lastExitedTicketNumberKey), // keys
+            args
         )
     );
-    log.debug("[existsPaymentSlot] userId: {}, ticketNumber: {}, result: {}", userId, ticketNumber,
+
+    log.debug("[insertPaymentAccessAndUpdateLastProcessed] productId: {}, result: {}", productId,
         result);
-    return result.map(value -> value == 1)
-        .orElse(false);
+    return result.map(value -> value == 1).orElse(false);
+  }
+
+  public Long getPaymentAccessUserCount(Long productId) {
+    String key = getPaymentPageUserKey(productId);
+    return sortedSetValueRedisTemplate.opsForZSet().zCard(key);
   }
 
   public Long getLastExitedTicketNumber(Long productId) {
@@ -61,13 +76,6 @@ public class OrderPaymentSlotRedisRepository {
     Object value = sortedSetValueRedisTemplate.opsForValue().get(key);
     log.debug("[getLastExitedTicketNumber] userId: {}, value: {}", productId, value);
     return value != null ? Long.parseLong(String.valueOf(value)) : 0L;
-  }
-
-  public void updateLastExitedTicketNumber(Long productId, Long lastExitedTicketNumber) {
-    String key = getLastExitedTicketNumberKey(productId);
-    log.debug("[updateLastExitedTicketNumber] userId: {}, lastExitedTicketNumber: {}", productId,
-        lastExitedTicketNumber);
-    sortedSetValueRedisTemplate.opsForValue().set(key, lastExitedTicketNumber);
   }
 
   public void removePaymentPageUser(Long productId, String userId) {
