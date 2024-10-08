@@ -24,5 +24,4 @@ public class OrderTicketNumberRedisRepository {
     String key = getLastTicketNumberKey(productId);
     longValueRedisTemplate.opsForValue().increment(key, -1);
   }
-
 }
