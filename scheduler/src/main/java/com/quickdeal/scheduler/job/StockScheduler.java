@@ -3,6 +3,7 @@ package com.quickdeal.scheduler.job;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.common.service.domain.Product;
 import java.util.List;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ public class StockScheduler {
     this.stockCacheService = stockCacheService;
   }
 
+  @Async
   @Scheduled(fixedRate = 60000) // 60초마다 실행
   public void updateStockCache() {
     List<Product> products = productService.getProdudctList();

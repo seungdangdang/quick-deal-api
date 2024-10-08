@@ -1,4 +1,4 @@
-package com.quickdeal.product.api.resource;
+package com.quickdeal.product.inbound.api.resource;
 
 import com.quickdeal.common.service.domain.CategoryType;
 import com.quickdeal.common.service.domain.Product;

@@ -1,4 +1,4 @@
-package com.quickdeal.product.api.resource;
+package com.quickdeal.product.inbound.api.resource;
 
 import java.util.List;
 

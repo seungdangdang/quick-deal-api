@@ -2,6 +2,7 @@ class Versions {
     companion object {
         const val SPRING_BOOT = "3.3.2"
         const val LOMBOK = "1.18.28"
+        val JDK = JavaVersion.VERSION_17.toString()
     }
 }
 
@@ -37,6 +38,9 @@ subprojects {
         implementation("org.springframework.boot:spring-boot-starter-web:${Versions.SPRING_BOOT}")
         implementation("org.springframework.boot:spring-boot-starter-data-jpa:${Versions.SPRING_BOOT}")
         implementation("org.projectlombok:lombok:${Versions.LOMBOK}")
+        implementation("org.springframework.boot:spring-boot-starter-actuator:3.3.4")
+        implementation("io.micrometer:micrometer-registry-prometheus")
+        implementation("org.apache.commons:commons-lang3:3.17.0")
         annotationProcessor("org.projectlombok:lombok:${Versions.LOMBOK}")
         annotationProcessor("jakarta.annotation:jakarta.annotation-api")
         annotationProcessor("jakarta.persistence:jakarta.persistence-api")
@@ -45,4 +49,23 @@ subprojects {
         testImplementation("org.junit.jupiter:junit-jupiter-api")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     }
+
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        sourceCompatibility = Versions.JDK
+        targetCompatibility = Versions.JDK
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+}
+
+tasks.bootJar {
+    enabled = false
+    mainClass.set("com.quickdeal.core.CoreApplication")
+}
+
+tasks.jar {
+    enabled = true
 }

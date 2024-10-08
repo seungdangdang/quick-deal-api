@@ -1,6 +1,6 @@
-package com.quickdeal.product.infrastructure.repository;
+package com.quickdeal.product.outbound.rdb.repository;
 
-import com.quickdeal.product.infrastructure.entity.ProductEntity;
+import com.quickdeal.product.outbound.rdb.model.ProductEntity;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

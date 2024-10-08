@@ -7,10 +7,6 @@ class Versions {
     }
 }
 
-plugins {
-    id("java")
-}
-
 group = "com.quickdeal"
 version = "0.0.1-SNAPSHOT"
 
@@ -24,6 +20,7 @@ dependencies {
     implementation("io.lettuce:lettuce-core:6.4.0.RELEASE")
     implementation("org.springframework.kafka:spring-kafka:${Versions.SPRING_KAFKA}")
     implementation("org.apache.kafka:kafka-clients:${Versions.KAFKA}")
+    implementation("org.apache.commons:commons-pool2")
     implementation(project(":common"))
     implementation(project(":product"))
     runtimeOnly("io.jsonwebtoken:jjwt-impl:${Versions.JJWT_API}")

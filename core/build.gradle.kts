@@ -3,9 +3,6 @@ class Versions {
         const val FLYWAY = "10.10.0"
     }
 }
-plugins {
-    id("java")
-}
 
 group = "com.quickdeal"
 version = "0.0.1-SNAPSHOT"
@@ -36,4 +33,12 @@ tasks.jar {
 
 tasks.bootJar {
     enabled = true
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("src/main/java")
+        }
+    }
 }

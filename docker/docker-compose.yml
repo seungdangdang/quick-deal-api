@@ -1,0 +1,84 @@
+services:
+  db:
+    image: mysql:8.4.2
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: quick_deal
+    command: >
+      mysqld --general-log=1 
+              --general-log-file=/var/log/mysql/general-log.log 
+              --innodb_print_all_deadlocks=1
+              --log_error=/var/lib/mysql/error.log
+    ports:
+      - "3306:3306"
+    networks:
+      - quick-deal-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4.0
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - quick-deal-network
+    command: [ "redis-server", "--bind", "0.0.0.0" ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    container_name: kafka
+    image: apache/kafka:3.8.0
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+      - "9093:9093"
+    networks:
+      - quick-deal-network
+    volumes:
+      - kafka_data:/data
+    environment:
+      KAFKA_CFG_BROKER_ID: 1
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      #      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://kafka:9092 # 애플리케이션 - 컨테이너
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092, DOCKER://kafka:9093 # 애플리케이션 - jar, intellj
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,DOCKER://:9093,CONTROLLER://:29093
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      CLUSTER_ID: 80EA1541-4E7E-49C0-B9AA-AD45FB2E6091
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    restart: unless-stopped
+    container_name: kafka-ui
+    ports:
+      - '8081:8080'
+    networks:
+      - quick-deal-network
+    environment:
+      KAFKA_CLUSTERS_0_NAME: Local-Kraft-Cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      DYNAMIC_CONFIG_ENABLED: true
+      KAFKA_CLUSTERS_0_AUDIT_TOPICAUDITENABLED: true
+      KAFKA_CLUSTERS_0_AUDIT_CONSOLEAUDITENABLED: true
+    depends_on:
+      - kafka
+volumes:
+  kafka_data:
+
+networks:
+  quick-deal-network:
+    external: true
