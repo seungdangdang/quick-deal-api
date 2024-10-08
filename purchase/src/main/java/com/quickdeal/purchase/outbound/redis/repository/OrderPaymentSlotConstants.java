@@ -4,72 +4,76 @@ import org.springframework.data.redis.core.script.RedisScript;
 
 class OrderPaymentSlotConstants {
 
-  private static final String EXISTS_PAYMENT_SLOT_LUA_SCRIPT_STRING = """
-      local productId = KEYS[1]
-      local ticketNumber = tonumber(ARGV[1])
-      local userId = ARGV[2]
-      local maxPaymentPageUsers = tonumber(ARGV[3])
-      local expiredAtEpochSeconds = tonumber(ARGV[4])
+  private static final String UPDATE_LAST_PROCESSED_TICKET_AND_ADD_PAYMENT_USERS_STRING = """
+      -- (로그 기록) 입력된 사용자 수
+      local numberOfUsers = (#ARGV - 1) / 2
+      redis.log(redis.LOG_NOTICE, "Processing " .. numberOfUsers .. " users for payment access.")
       
-      -- 변수 값들을 문자열로 변환하여 로그 출력
-      redis.log(redis.LOG_NOTICE, string.format("[User ID: %s] Product ID: %s, Ticket Number: %d, Max Payment Users: %d, Expiry Time: %d",
-              tostring(userId), tostring(productId), ticketNumber, maxPaymentPageUsers, expiredAtEpochSeconds))
+      local paymentPageAccessUserKey = KEYS[1]
+      local lastExitedTicketNumberKey = KEYS[2]
+      local expiredEpochSeconds = ARGV[1]
+      local rollbackRequired = false
       
-      -- 키 변수화
-      local paymentAccessibleUserIdZsetKey = "product:" .. productId .. ":paymentPageUser"
-      local lastExitedTicketNumberKey = "product:" .. productId .. ":lastExitedTicketNumber"
-      
-      -- 현재 접속자 수 확인 (Sorted Set의 개수를 ZCARD로 가져옴)
-      local currentAccessCount = redis.call("ZCARD", paymentAccessibleUserIdZsetKey)
-      redis.log(redis.LOG_NOTICE, "[" .. userId .. "][redis.call(\\"ZCARD\\", paymentAccessibleUserIdZsetKey)] 현재 접속자 수 확인 (Sorted Set의 개수를 ZCARD로 가져옴) 결과 " .. tostring(currentAccessCount) .. "/" .. tostring(maxPaymentPageUsers) .. "명 접속중입니다.")
-      
-      -- 사용자 ID가 정렬된 집합(Sorted Set)에 존재하는지 확인
-      local isUserPresent = redis.call("ZSCORE", paymentAccessibleUserIdZsetKey, userId)
-      redis.log(redis.LOG_NOTICE, "[" .. userId .. "][redis.call(\\"ZSCORE\\", paymentAccessibleUserIdZsetKey, userId)] 사용자 ID가 정렬된 집합(Sorted Set)에 존재하는지 확인 결과 " .. "isUserPresent: " .. tostring(isUserPresent) .. ", ZSCORE product:5:lastTicketNumber " .. userId)
-      
-      if currentAccessCount < maxPaymentPageUsers and not isUserPresent then
-          -- 사용자 추가 및 만료 시간 설정
-          redis.call("ZADD", paymentAccessibleUserIdZsetKey, expiredAtEpochSeconds, userId)
-          redis.log(redis.LOG_NOTICE, "[" .. userId .. "][redis.call(\\"ZADD\\", paymentAccessibleUserIdZsetKey, expiredAtEpochSeconds, userId)] " .. "ZADD paymentAccessibleUserIdZsetKey:" .. tostring(paymentAccessibleUserIdZsetKey))
-      
-          local previousTicketNumber = redis.call("GET", lastExitedTicketNumberKey)
-          redis.log(redis.LOG_NOTICE, "[" .. userId .. "][redis.call(\\"GET\\", lastExitedTicketNumberKey)] " .. "previousTicketNumber: " .. tostring(previousTicketNumber))
-          local status, err = pcall(function()
-              -- 마지막 처리 대기열 번호 업데이트
-              redis.call("SET", lastExitedTicketNumberKey, ticketNumber)
-              redis.log(redis.LOG_NOTICE, "[" .. userId .. "][redis.call(\\"SET\\", lastExitedTicketNumberKey, ticketNumber)] " .. "updatedTicketNumber: " .. tostring(ticketNumber))
-          end)
-      
-          if not status then
-              redis.log(redis.LOG_WARNING, "[" .. userId .. "][redis.call(\\"SET\\", lastExitedTicketNumberKey, ticketNumber)] " .. "pcall 오류 발생: " .. tostring(err))
-      
-              local rollbackStatus, rollbackErr = pcall(function()
-                  redis.call("ZREM", paymentAccessibleUserIdZsetKey, userId)
-              end)
-              if not rollbackStatus then
-                  redis.log(redis.LOG_WARNING, "[\\" .. userId .. \\"][redis.call(\\"ZREM\\", paymentAccessibleUserIdZsetKey, userId)] 접속자 수 롤백 중 오류 발생: " .. tostring(rollbackErr))
-              end
-      
-              local queueRollbackStatus, queueRollbackErr = pcall(function()
-                  if previousTicketNumber then
-                      redis.call("SET", lastExitedTicketNumberKey, previousTicketNumber)
-                  else
-                      redis.call("DEL", lastExitedTicketNumberKey)
-                  end
-              end)
-              if not queueRollbackStatus then
-                  redis.log(redis.LOG_WARNING, "[" .. userId .. "][redis.call(\\"SET\\", lastExitedTicketNumberKey, previousTicketNumber) / redis.call(\\"DEL\\", lastExitedTicketNumberKey)] " .. "대기열 번호 롤백 중 오류 발생: " .. tostring(queueRollbackErr))
-              end
-      
-              return redis.error_reply("[\\" .. userId .. \\"] 작업 중 오류가 발생하여 롤백되었습니다.")
-          end
-      
-          return 1
-      else
-          return 0
+      -- 사용자 ID와 만료 시간을 Sorted Set에 일괄 추가
+      local zaddArgs = {paymentPageAccessUserKey}
+      for i = 2, #ARGV, 2 do
+          local userId = ARGV[i]
+          local ticketNumber = ARGV[i + 1]
+          table.insert(zaddArgs, expiredEpochSeconds)
+          table.insert(zaddArgs, userId)
       end
+      
+      -- ZADD 명령어를 한 번의 호출로 실행
+      local status, err = pcall(function()
+          redis.call('ZADD', unpack(zaddArgs))
+      end)
+      
+      if not status then
+          rollbackRequired = true
+          redis.log(redis.LOG_WARNING, "Error adding users to ZSET: " .. tostring(err))
+      end
+      
+      if rollbackRequired then
+          -- ZADD 작업 중 오류가 발생한 경우 롤백 수행
+          for i = 2, #ARGV, 2 do
+              local userId = ARGV[i]
+              redis.call('ZREM', paymentPageAccessUserKey, userId)
+          end
+          redis.log(redis.LOG_WARNING, "Rollback: removed added users from ZSET.")
+          return redis.error_reply("An error occurred while adding users. Rollback completed.")
+      end
+      
+      -- 마지막 ticketNumber를 찾기 위해 ARGV 리스트의 maximum 추출
+      local maxTicketNumber = -1
+      for i = 3, #ARGV, 2 do
+          local ticketNumber = tonumber(ARGV[i])
+          if ticketNumber > maxTicketNumber then
+              maxTicketNumber = ticketNumber
+          end
+      end
+      
+      -- lastExitedTicketNumberKey에 가장 큰 ticketNumber를 설정
+      local previousTicketNumber = redis.call('GET', lastExitedTicketNumberKey)
+      local status, err = pcall(function()
+          redis.call('SET', lastExitedTicketNumberKey, maxTicketNumber)
+      end)
+      
+      if not status then
+          -- SET 작업 중 오류가 발생한 경우 롤백 수행
+          redis.log(redis.LOG_WARNING, "Error setting last exited ticket number: " .. tostring(err))
+          if previousTicketNumber then
+              redis.call('SET', lastExitedTicketNumberKey, previousTicketNumber)
+          else
+              redis.call('DEL', lastExitedTicketNumberKey)
+          end
+          redis.log(redis.LOG_WARNING, "Rollback: restored previous ticket number.")
+          return redis.error_reply("An error occurred while setting the last exited ticket number. Rollback completed.")
+      end
+      
+      return 1
       """;
 
-  public static final RedisScript<Long> EXISTS_PAYMENT_SLOT_LUA_SCRIPT =
-      RedisScript.of(EXISTS_PAYMENT_SLOT_LUA_SCRIPT_STRING, Long.class);
+  public static final RedisScript<Long> UPDATE_LAST_PROCESSED_TICKET_AND_ADD_PAYMENT_USERS =
+      RedisScript.of(UPDATE_LAST_PROCESSED_TICKET_AND_ADD_PAYMENT_USERS_STRING, Long.class);
+
 }
