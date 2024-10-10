@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.ContainerProperties.AckMode;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -28,7 +28,10 @@ public class KafkaConsumerConfig {
     config.put(ConsumerConfig.GROUP_ID_CONFIG, "payment-consumer-group");
     config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
+    config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100); // 한번에 최대 100개의 레코드를 가져올 수 있다
+    config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG,
+        500); // 폴링 최소 바이트 만큼 데이터가 채워지지 않아도 0.5초 마다 데이터를 가져옴
+    config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
     return new DefaultKafkaConsumerFactory<>(config);
   }
 
@@ -36,8 +39,8 @@ public class KafkaConsumerConfig {
   public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory());
-    factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-    factory.setConcurrency(10); // FIXME: 파티션 수에 맞추기
+    factory.getContainerProperties().setAckMode(AckMode.MANUAL); // 수동 커밋 설정
+    factory.setBatchListener(true);
     return factory;
   }
 

@@ -1,6 +1,5 @@
 package com.quickdeal.purchase.service;
 
-import com.quickdeal.common.exception.MaxUserLimitExceededException;
 import com.quickdeal.common.service.ProductService;
 import com.quickdeal.purchase.config.OrderCreationProperties;
 import com.quickdeal.purchase.domain.OrderTicket;
@@ -14,16 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @EnableConfigurationProperties({OrderCreationProperties.class})
 public class OrderTicketService {
 
   private final Logger log;
-  private final long retryDelay;
-  private final long retryLimit;
-  private final int maxPaymentPageUsers;
   private final OrderTicketTokenService orderTicketTokenService;
   private final ProductService productService;
   private final MessageQueueProducer messageQueueService;
@@ -43,9 +38,6 @@ public class OrderTicketService {
     this.orderPaymentSlotRedisRepository = orderPaymentSlotRedisRepository;
     this.productTopicMappingService = productTopicMappingService;
     this.log = LoggerFactory.getLogger(this.getClass());
-    this.retryDelay = orderCreationProperties.getRetryDelay();
-    this.retryLimit = orderCreationProperties.getRetryLimit();
-    this.maxPaymentPageUsers = orderCreationProperties.getMaxConcurrentUsers();
     this.productService = productService;
     this.orderTicketTokenService = orderTicketTokenService;
     this.messageQueueService = messageQueueService;
@@ -128,38 +120,5 @@ public class OrderTicketService {
           usersAheadNumberOfCurrentUser,
           renewToken);
     }
-  }
-
-  @Transactional
-  // :: 페이지 접근 가능 여부 확인
-  public void validateTicketAndPaymentPageAccessible(QueueMessage message)
-      throws InterruptedException {
-    // 유효 토큰 검증
-    orderTicketTokenService.validateTokenAndGetClaims(message.ticketToken());
-    // 페이지 접속자 확인
-    validatePaymentPageAccessWithRetryLimit(message.userId(), message.productId(),
-        message.ticketNumber());
-  }
-
-  // :: 페이지 액세스 확인 with 재실행
-  public void validatePaymentPageAccessWithRetryLimit(
-      String userId,
-      Long productId,
-      Long ticketNumber
-  ) throws InterruptedException {
-    for (int i = 0; i < retryLimit; i++) {
-      boolean existsPaymentSlot = orderPaymentSlotRedisRepository.existsPaymentSlot(
-          productId,
-          ticketNumber,
-          userId,
-          maxPaymentPageUsers
-      );
-      if (existsPaymentSlot) {
-        productService.decreaseStockQuantityById(productId);
-        return;
-      }
-      Thread.sleep(retryDelay);
-    }
-    throw new MaxUserLimitExceededException("결제페이지의 최대 사용자 용량에 도달했습니다.");
   }
 }

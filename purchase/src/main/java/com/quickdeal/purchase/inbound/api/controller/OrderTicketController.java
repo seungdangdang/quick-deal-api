@@ -32,7 +32,8 @@ public class OrderTicketController {
   public OrderTicketController(
       @Value("${order-creation.timeout-seconds}") Duration timeoutInSeconds,
       OrderTicketService ticketService,
-      OrderTicketTokenService orderTicketTokenService) {
+      OrderTicketTokenService orderTicketTokenService
+  ) {
     this.timeoutInSeconds = timeoutInSeconds;
     this.log = LoggerFactory.getLogger(OrderTicketController.class);
     this.ticketService = ticketService;

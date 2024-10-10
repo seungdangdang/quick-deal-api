@@ -79,17 +79,19 @@ logging:
     #    io.lettuce.core.resource: TRACE
     #    io.lettuce.core.pool: TRACE
     #    org.springframework.data.redis: TRACE
-    com.quickdeal.purchase.config.com.quickdeal.scheduler.job.RedisStatusScheduler: INFO
-    com.quickdeal.common.filter.com.quickdeal.common.filter.ApiRequestMetricsInterceptor: DEBUG
+    com.quickdeal.scheduler.job.RedisStatusScheduler: ERROR
+#    com.quickdeal.common.filter.com.quickdeal.common.filter.ApiRequestMetricsInterceptor: DEBUG
 
     ## kafka
     org.apache.kafka: ERROR # 카프카 노이지 할 때 이걸 켜자
     org.springframework.kafka: ERROR # 카프카 노이지 할 때 이걸 켜자
-  #    com.quickdeal.common.filter.LoggingFilter: DEBUG
+
+    com.quickdeal.common.filter.LoggingFilter: ERROR
   #    redis.clients.jedis.exceptions.JedisDataException: ERROR
   #    com.quickdeal.purchase.service.OrderTicketService: DEBUG
   #    com.quickdeal.purchase.inbound.api.controller.OrderTicketController: DEBUG
-  #    com.quickdeal: DEBUG
+    com.quickdeal.purchase.service.KafkaQueueServiceImpl: ERROR
+    com.quickdeal.purchase.inbound.consumer.TicketQueueConsumer: DEBUG
   #    com.quickdeal.auth.api.controller: INFO
   #    com.quickdeal.product.api.controller: INFO
   #    com.quickdeal.purchase.inbound.api.controller: INFO
@@ -106,8 +108,6 @@ logging:
 
 # 비즈니스 설정 값
 order-creation:
-  retry-delay: 1000
-  retry-limit: 500
   max-concurrent-users: 1000
   timeout-seconds: 1200s
   page-timeout-seconds: 600s
