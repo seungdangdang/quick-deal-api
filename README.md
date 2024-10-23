@@ -30,17 +30,22 @@
 주문 요청시 producer가 카프카에 레코드를 쌓게 됩니다. <br>
 consumer는 카프카에 쌓인 레코드를 주기적으로 가져오며, 레코드 전처리를 위해 Redis와 MySQL에서 데이터를 가져와 확인합니다. <br>
 결제 페이지에 접근가능한 유저가 있고, 재고가 있다면 가능한 수 만큼 요청 로직을 처리하고 레코드를 컨슘합니다. <br>
-Redis와 MySQL 작업의 트랜잭션을 보장해야 하기 떄문에 보상 트랜잭션이 구현되어 있습니다.
+Redis와 MySQL 작업의 트랜잭션을 보장해야 하기 때문에 보상 트랜잭션이 구현되어 있습니다.
 ![message queue system](https://github.com/user-attachments/assets/dbb9f0c4-333b-4794-ac1d-763a0287474e)
 
 
 ## 3.2. 성능 개선
 총 105 차례의 nGrinder 테스트를 통해 한계를 테스트하고 환경에 변화를 주며 성능 개선을 진행했습니다.
 
-nGrinder를 통해 성공한 테스트의 TPS 그래프의 비대칭성을 보고 병목을 의심하게 되었습니다. <br>
+TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 않는 문제를 보고 병목을 의심하게 되었습니다. <br>
 
-1. Prometheus와 Grafana를 이용한 모니터링 시스템을 구축하였고 레디스와 톰캣의 커넥션 풀을 조정하여 약간의 성능 개선을 할 수 있었습니다. <br>
-2. 제공되는 매트릭의 아쉬움을 느껴 Micrometer를 추가하여 API 매트릭을 수집했습니다. 이를 통해 Kafka consume 로직에서 성능 저하가 있음을 발견하였고 개선한 결과 동일한 가상 유저 환경에서 처리율을 56배 향상시킬 수 있었습니다. <br>
+1. Prometheus + Grafana 도입 [observability 향상1] <br>
+2. (Grafana) Kafka 대시보드 [consume 로직 문제 의심] <br>
+3. 커스텀 매트릭 수집을 위해 micrometer 적용 [observability 향상2] <br>
+4. (Grafana) 커스텀 대시보드 [consume 로직 문제 확신]
+
+ 
+ Kafka consume 로직에서 성능 저하가 있음을 발견하였고 개선한 결과 동일한 가상 유저 환경에서 처리율을 56배 향상시킬 수 있었습니다. <br>
 
 
 [ 상황 별 성능 ]
@@ -139,8 +144,6 @@ NoSQL을 고려하기도 하였으나 전체 서비스에서 DB를 추가할만�
 
 ### 6. 전체 아키텍처
 <img alt="image" src="https://github.com/user-attachments/assets/56b129af-a0b6-44e8-8ba2-11d595e30878">
-++ '다수의 구매 대기자 검증' 이라고 하면 어떨까?
-
 
 # 7. 시연 영상
 ### 7.1. 메인페이지
@@ -163,13 +166,4 @@ https://github.com/user-attachments/assets/aaf650e7-d437-4dd0-9d05-89a9755101e8
 ✔️ 결제 진행 <br>
 
 https://github.com/user-attachments/assets/6da0fa46-3327-48a2-a402-d8ad6e70a9b8
-
-
-
-
-
-# 8. TODO
-- 더 안전한 db 확장
-- redis가 뻗었을 때
-- 
 
