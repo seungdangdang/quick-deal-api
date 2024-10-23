@@ -72,7 +72,7 @@ TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 
 
 
 
-## 3.5. Modular Monolithic Architecture 도입
+## 3.3. Modular Monolithic Architecture 도입
 추가적인 학습 + Spring Webflux에 대한 러닝 커브 요인으로 Spring MVC 를 사용했습니다.
 서비스 분리를 위해 MSA도 고려 사항이었지만 복잡성을 고려하여 유사한 형태인 해당 아키텍처를 선택하게 되었습니다.
 
