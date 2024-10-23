@@ -72,13 +72,7 @@ TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 
 
 
 
-## 3.3. 내 앞 대기 인원 <br>
-유저가 준실시간으로 대기 정보를 공유 받으면서 내 앞 대기 인원에 대해 파악할 수 있도록 정보를 제공했습니다.
-<img alt="주문-대기" width="621" src="https://github.com/user-attachments/assets/f241d592-a238-40fb-a3f3-b18375d88c2e">
-
-
-
-## 3.4. Modular Monolithic Architecture 도입
+## 3.5. Modular Monolithic Architecture 도입
 추가적인 학습 + Spring Webflux에 대한 러닝 커브 요인으로 Spring MVC 를 사용했습니다.
 서비스 분리를 위해 MSA도 고려 사항이었지만 복잡성을 고려하여 유사한 형태인 해당 아키텍처를 선택하게 되었습니다.
 
@@ -93,6 +87,11 @@ TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 
 | purchase  | 구매 관련 API / Kafka, Redis 기반 대기열 서비스 관리               |
 | scheduler | 스케줄러 관련 API / 재고 캐싱 시스템 & Redis 상태 로그 & 만료된 결제 페이지 액세스 데이터 제거   |
 
+
+
+## 3.4. 내 앞 대기 인원 <br>
+유저가 준실시간으로 대기 정보를 공유 받으면서 내 앞 대기 인원에 대해 파악할 수 있도록 정보를 제공했습니다.
+<img alt="주문-대기" width="621" src="https://github.com/user-attachments/assets/f241d592-a238-40fb-a3f3-b18375d88c2e">
 
 
 ## 3.5. 상품 별 재고 캐싱 시스템
