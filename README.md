@@ -32,6 +32,9 @@ consumer는 카프카에 쌓인 레코드를 주기적으로 가져오며, 레�
 Redis와 MySQL 작업의 트랜잭션을 보장해야 하기 때문에 보상 트랜잭션이 구현되어 있습니다.
 ![message queue system](https://github.com/user-attachments/assets/dbb9f0c4-333b-4794-ac1d-763a0287474e)
 
+<br>
+<br>
+
 
 ## 3.2. 성능 개선
 총 105 차례의 nGrinder 테스트를 통해 한계를 테스트하고 환경에 변화를 주며 성능 개선을 진행했습니다.
@@ -68,9 +71,8 @@ TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 
 | Peak TPS | 108 | 1,500.5     | 13배 🔼  |
 | 주문 건 / 1분 | 5.8  | 329.68          |  56배 🔼 |
 
-
-
-
+<br>
+<br>
 
 ## 3.3. Modular Monolithic Architecture 도입
 추가적인 학습 + Spring Webflux에 대한 러닝 커브 요인으로 Spring MVC 를 사용했습니다.
@@ -87,12 +89,16 @@ TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 
 | purchase  | 구매 관련 API / Kafka, Redis 기반 대기열 서비스 관리               |
 | scheduler | 스케줄러 관련 API / 재고 캐싱 시스템 & Redis 상태 로그 & 만료된 결제 페이지 액세스 데이터 제거   |
 
-
+<br>
+<br>
 
 ## 3.4. 내 앞 대기 인원 <br>
 유저가 준실시간으로 대기 정보를 공유 받으면서 내 앞 대기 인원에 대해 파악할 수 있도록 정보를 제공했습니다.
 <img alt="주문-대기" width="621" src="https://github.com/user-attachments/assets/f241d592-a238-40fb-a3f3-b18375d88c2e">
 
+
+<br>
+<br>
 
 ## 3.5. 상품 별 재고 캐싱 시스템
 
@@ -108,14 +114,14 @@ NoSQL을 고려하기도 하였으나 전체 서비스에서 DB를 추가할만�
 
 <img alt="stock scheduler" width="621" src="https://github.com/user-attachments/assets/8255a308-5c16-40ab-a17c-43334fc0641e"> <br>
 
-
+<br>
+<br>
 
 ## 3.6. 주문 가능 시간이 만료된 유저 삭제 시스템
 
 결제 페이지에서 주문이 가능한 시간이 정해져 있으므로, 레디스의 결제 페이지 접근 유저 저장소에서 <br>
 
-<img alt="remove expired orders" width="621" src="https://github.com/user-attachments/assets/8027ffef-bb8c-4ad1-acd8-dc3ed36ec0ad">
-
+<img alt="remove expired orders" width="621" src="https://github.com/user-attachments/assets/8027ffef-bb8c-4ad1-acd8-dc3ed36ec0ad"><br><br>
 
 
 # 4. 기술 스택
@@ -132,16 +138,16 @@ NoSQL을 고려하기도 하였으나 전체 서비스에서 DB를 추가할만�
 | **분류**          | **기술 스택**                           |
 |-------------------|-----------------------------------------|
 | **언어**          | ![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow) ![HTML](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) ![CSS](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white) |
-| **프레임워크**    | ![React](https://img.shields.io/badge/React-18.3.1-blue)         |
+| **프레임워크**    | ![React](https://img.shields.io/badge/React-18.3.1-blue)         | <br><br>
+
+<br>
 
 
+# 5. ERD 다이어그램
+![ERD](https://github.com/user-attachments/assets/e94b9229-acae-4d57-bb43-0140e44a600c) <br><br>
 
-
-## 5. ERD 다이어그램
-![ERD](https://github.com/user-attachments/assets/e94b9229-acae-4d57-bb43-0140e44a600c)
-
-### 6. 전체 아키텍처
-<img alt="image" src="https://github.com/user-attachments/assets/56b129af-a0b6-44e8-8ba2-11d595e30878">
+# 6. 전체 아키텍처
+<img alt="image" src="https://github.com/user-attachments/assets/56b129af-a0b6-44e8-8ba2-11d595e30878"> <br><br>
 
 # 7. 시연 영상
 ### 7.1. 메인페이지
