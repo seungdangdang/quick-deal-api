@@ -109,7 +109,7 @@ TPS 그래프의 비대칭성과 결제 페이지 접근 요청이 해소되지 
 
 폴링의 경우 동시에 여러 사람이 짧은 주기로 매번 재고를 확인하면 DB의 부하가 우려되어 재고 캐싱 데이터를 제공하고자 했습니다. <br>
 
-스케줄러가 주기적으로 실제 재고를 자바 내장 클래스인 ConcurrentHashMap에 캐싱하게끔 구현헀습니다. <br>
+스케줄러가 주기적으로 실제 재고를 자바 내장 클래스인 HashMap에 캐싱하게끔 구현헀습니다. <br>
 NoSQL을 고려하기도 하였으나 전체 서비스에서 DB를 추가할만큼의 영향이 크지 않기에 Map을 사용하게 되었습니다.
 
 <img alt="stock scheduler" width="621" src="https://github.com/user-attachments/assets/8255a308-5c16-40ab-a17c-43334fc0641e"> <br>
