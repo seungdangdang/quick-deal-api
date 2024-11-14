@@ -1,6 +1,6 @@
 class Versions {
     companion object {
-        const val FLYWAY = "10.10.0"
+        const val FLYWAY = "10.20.1"
     }
 }
 
@@ -19,7 +19,7 @@ dependencies {
     implementation(project(":auth"))
     implementation(project(":scheduler"))
     implementation("org.flywaydb:flyway-core:${Versions.FLYWAY}")
-    implementation("org.flywaydb:flyway-mysql")
+    implementation(files("${rootProject.projectDir}/flyway-mysql-10.20.1.jar"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
 }
 

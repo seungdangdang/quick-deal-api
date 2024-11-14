@@ -39,19 +39,8 @@ public class LoggingFilter implements Filter {
 
     // 응답 상태 코드에 따라 로그 레벨 설정
     int status = httpResponse.getStatus();
-//    if (status >= 200 && status < 300) {
     log.debug("[RES] {} {} {}", httpRequest.getMethod(),
         httpRequest.getRequestURI(), status);
-//    } else if (status >= 300 && status < 400) {
-//      log.debug("[RES] {} {} Outgoing Response: {}",httpRequest.getMethod(),
-//          httpRequest.getPathInfo(), status);
-//    } else if (status >= 400 && status < 500) {
-//      log.warn("[RES] {} {} Outgoing Response: {}",httpRequest.getMethod(),
-//          httpRequest.getPathInfo(), status);
-//    } else if (status >= 500) {
-//      log.error("[RES] {} {} Outgoing Response: {}",httpRequest.getMethod(),
-//          httpRequest.getPathInfo(), status);
-//    }
   }
 
   @Override
