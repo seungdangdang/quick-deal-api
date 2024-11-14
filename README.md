@@ -1,7 +1,9 @@
 <p align="center"><img alt="quick-deal-logo(white)" src="https://github.com/user-attachments/assets/4db59def-1ea0-44ab-b055-457439062c0d">
 
 # 1. 퀵딜
-- 파격적인 할인 상품을 판매하는 웹사이트 컨셉의 개인 프로젝트핫한 상품을 온라인 할인 판매하는 웹사이트
+- 파격적인 할인 상품을 판매하는 웹사이트 컨셉의 프로젝트
+- 개인 진행
+  
 <br>
 
 # 2. 프로젝트 요약
