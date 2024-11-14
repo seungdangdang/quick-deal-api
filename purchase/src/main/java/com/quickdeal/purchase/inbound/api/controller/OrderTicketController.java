@@ -76,7 +76,7 @@ public class OrderTicketController {
     HttpStatus status = switch (queueStatus.status()) {
       case ACCESS_GRANTED -> HttpStatus.OK;
       case ACCESS_DENIED -> HttpStatus.FORBIDDEN;
-      case ITEM_SOLD_OUT -> HttpStatus.CONFLICT;
+      case ITEM_SOLD_OUT -> HttpStatus.UNPROCESSABLE_ENTITY;
     };
 
     return new ResponseEntity<>(resource, status);

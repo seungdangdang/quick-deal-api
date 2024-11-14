@@ -54,11 +54,9 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   @Transactional(readOnly = true)
-  public boolean hasStockQuantityById(Long id) {
-    Product product = productRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("해당 상품 아이디는 존재하지 않습니다.")).toProduct();
-
-    return product.stockQuantity() > 0;
+  public long getStockQuantityById(Long id) {
+    return productRepository.findStockQuantityById(id)
+        .orElseThrow(() -> new NotFoundException("해당 상품 아이디는 존재하지 않습니다."));
   }
 
   @Override
@@ -73,8 +71,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   @Transactional
-  public void decreaseStockQuantityById(Long productId) {
-    productRepository.decreaseStockQuantity(productId);
+  public void decreaseStockQuantityById(Long productId, int quantity) {
+    productRepository.decreaseStockQuantityById(productId, quantity);
   }
 
   @Override

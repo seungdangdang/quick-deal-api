@@ -13,11 +13,11 @@ public interface ProductService {
 
   int getPriceById(Long id);
 
-  boolean hasStockQuantityById(Long id);
+  long getStockQuantityById(Long id);
 
   boolean hasCachingStockQuantityById(Long id);
 
-  void decreaseStockQuantityById(Long id);
+  void decreaseStockQuantityById(Long id, int amount);
 
   void increaseStockQuantityById(Long id);
 }

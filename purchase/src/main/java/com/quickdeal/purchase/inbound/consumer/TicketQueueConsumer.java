@@ -1,6 +1,7 @@
 package com.quickdeal.purchase.inbound.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quickdeal.common.service.ProductService;
 import com.quickdeal.purchase.domain.PaymentPageUser;
 import com.quickdeal.purchase.domain.QueueMessage;
 import com.quickdeal.purchase.service.InMemoryService;
@@ -22,17 +23,19 @@ import org.springframework.stereotype.Service;
 public class TicketQueueConsumer {
 
   private final Logger log = LoggerFactory.getLogger(this.getClass());
+  private final ProductService productService;
   private final OrderTicketTokenService orderTicketTokenService;
   private final ObjectMapper objectMapper;
   private final MeterRegistry meterRegistry;
   private final InMemoryService inMemoryService;
 
   public TicketQueueConsumer(
-      OrderTicketTokenService orderTicketTokenService,
+      ProductService productService, OrderTicketTokenService orderTicketTokenService,
       ObjectMapper objectMapper,
       MeterRegistry meterRegistry,
       InMemoryService inMemoryService
   ) {
+    this.productService = productService;
     this.orderTicketTokenService = orderTicketTokenService;
     this.objectMapper = objectMapper;
     this.meterRegistry = meterRegistry;
@@ -49,8 +52,16 @@ public class TicketQueueConsumer {
     String topic = records.get(0).topic();
     long productId = extractProductIdFromTopic(topic);
 
-    log.info("Consuming records for productId: {}", productId);
-    processRecords(records, consumer, productId);
+    long availableStock = productService.getStockQuantityById(productId);
+
+    long numberOfRecordsToProcess = Math.min(records.size(), availableStock);  // 처리할 수 있는 수만큼 계산
+
+    if (availableStock <= 0) {
+      log.warn("No stock available for productId: {}", productId);
+      return;  // 재고가 없으면 처리 중단
+    }
+
+    processRecords(records.subList(0, (int) numberOfRecordsToProcess), consumer, productId);  // 처리 가능한 만큼만 컨슘
   }
 
   private long extractProductIdFromTopic(String topic) {
@@ -132,6 +143,7 @@ public class TicketQueueConsumer {
 
     boolean result = false;
     if (!processableRequests.isEmpty()) {
+      productService.decreaseStockQuantityById(productId, processableRequests.size());
       result = inMemoryService.insertPaymentAccessAndUpdateLastProcessed(processableRequests,
           productId);
     }
